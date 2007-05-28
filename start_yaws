@@ -1,0 +1,2 @@
+#!/bin/sh
+yaws --conf testing.conf --pa rails -name server@volcano.local --runmod rails_connection_pool
