@@ -2,7 +2,7 @@
 -compile(export_all).
 
 main(_X) ->
-  code:add_patha("./rails"),
+  code:add_patha("./elibs"),
   erlang:set_cookie(node(), 'AWZVAQXUPGVPKZQLYEUP'),
   io:format("Adding 4 responders to the demo cluster: chisai.local.~n"),
   Command = "./helloworld/script/rack.rb",
