@@ -25,3 +25,9 @@ This project's goal is to use the YAWS webserver (and additional erlang-based in
 7. Point your browser at http://localhost:8002/
 8. Type various time related words into the box and watch the time appear below.
 9. Rejoice!
+
+== Contribution Notes
+* Please note that empty directories should contain a .placeholder file
+  (which should be empty), to facilitate the use of other version
+  control systems which bridge to subversion but don't support empty
+  directories.
