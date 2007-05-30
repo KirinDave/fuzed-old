@@ -32,47 +32,47 @@ handle_request_helper(Arg,ServerInfo,Retries) ->
 
 %% Server manipulation
 start() -> 
-  register(?MODULE, spawn(fun() -> rails_connection_pool:loop([],[]) end)).
+  global:register_name(?MODULE, spawn(fun() -> rails_connection_pool:loop([],[]) end)).
 
 add(Rsrc) ->
-  ?MODULE ! {add, Rsrc},
+  global:send(?MODULE, {add, Rsrc}),
   ok.
 
 remove(Rsrc) ->
-  ?MODULE ! {remove, Rsrc},
+  global:send(?MODULE, {remove, Rsrc}),
   ok.
 
 get() ->
-  ?MODULE ! {get, self()},
+  global:send(?MODULE, {get, self()}),
   receive
     {node, X} -> 
       X
   end.
 
 refund(Node) ->
-  ?MODULE ! {refund, Node},
+  global:send(?MODULE, {refund, Node}),
   ok.
 
 list() ->
-  ?MODULE ! {list, self()},
+  global:send(?MODULE, {list, self()}),
   receive
     {nodes, A} ->
       A
   end.
 
 list_all() ->
-  ?MODULE ! {list_all, self()},
+  global:send(?MODULE, {list_all, self()}),
   receive
     {all_nodes, A} ->
       A
   end.
 
 remove_server(Server) ->
-  ?MODULE ! {remove_server, Server},
+  global:send(?MODULE, {remove_server, Server}),
   ok.
 
 remove_all() ->
-  ?MODULE ! {remove_all},
+  global:send(?MODULE, {remove_all}),
   ok.
 
 remove_server_filter(Server, {Server, _X}) -> false;
