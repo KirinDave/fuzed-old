@@ -19,8 +19,6 @@ send(WrappedPort, Message) ->
   WrappedPort.
 
 send_from(Target, WrappedPort, Message) -> 
-  io:format("(S:~p -> R~p) ~p~n: ~p", [self(), WrappedPort, Message,
-                                      {Target, {command, term_to_binary(Message)}} ]),
   WrappedPort ! {Target, {command, term_to_binary(Message)}},
   WrappedPort.
 
