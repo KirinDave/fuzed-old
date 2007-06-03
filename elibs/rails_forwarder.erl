@@ -30,8 +30,9 @@ handle_request(Resource, Request, ServerOptions, Timeout) ->
   end.
 
 handle_request_for(Responder, Request, ServerOptions, Target) ->
-  Data = term_to_binary({request, prepare_request(Request, ServerOptions)}),
-  Responder ! {Target, {command, Data}}.
+  Data = {request, prepare_request(Request, ServerOptions)},
+  port_wrapper:send_from(Target, Responder, Data).
+  
   
 get_rails_response(Responder, Timeout) ->
   receive

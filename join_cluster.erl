@@ -6,7 +6,23 @@ main(_X) ->
   erlang:set_cookie(node(), 'AWZVAQXUPGVPKZQLYEUP'),
   io:format("Adding 4 responders to the demo cluster: chisai.local.~n"),
   Command = "./helloworld/script/rack.rb",
-  lists:map(fun(Cmd) -> create_and_add(Cmd) end, lists:duplicate(4, Command)).
+  net_adm:ping(server@localhost), sleep_in_HEAVENLY_PEACE(2),
+  start_resource_manager(Command, 4).
 
-create_and_add(Cmd) ->
-  port_test:provide_responder(server@chisai.local, port_wrapper:wrap(Cmd)).
+start_resource_manager(Command, N) -> 
+  Spawner = fun() -> 
+    Responder = port_wrapper:wrap(Command),
+    rails_connection_pool:add({node(), Responder}),
+    Responder
+  end,
+  Slayer = fun(Responder) -> 
+    Responder ! shutdown,
+    rails_connection_pool:remove({node(), Responder})
+  end,
+  resource_manager:start_link(Spawner,Slayer,N).
+
+sleep_in_HEAVENLY_PEACE(Secs) -> 
+  receive
+  after Secs * 1000 -> 
+    Secs * 1000
+  end.
