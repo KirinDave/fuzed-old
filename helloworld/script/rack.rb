@@ -29,7 +29,7 @@ module Rack
         
         me = self
         
-        receive do
+        receive(IO.new(3), IO.new(4)) do
           match(:request, list(:request)) do
             $t = Time.now
             log('------------MATCH------------')

@@ -5,7 +5,7 @@
 %% Convenience Function
 simple_handle_request(Arg,ServerInfo) ->
   {Source, Resource} = rails_connection_pool:get(),
-  Response = rails_forwarder:rails_handle_request(Resource, Arg, ServerInfo, 10000),
+  Response = rails_forwarder:handle_request(Resource, Arg, ServerInfo, 10000),
   rails_connection_pool:refund({Source,Resource}),
   Response.
   

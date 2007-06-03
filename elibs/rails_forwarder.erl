@@ -6,16 +6,16 @@
 %-export([rails_create_responder/1, rails_create_responders/2, rails_handle_request/3, 
 %         rails_handle_request_for/3, get_rails_response/2, prepare_request/1, decode_result/1]).
 
-create_responder(Command) ->
-  port_wrapper:wrap(Command).
-
-create_responders(Command, N) ->
-  create_responders_helper(Command, N, []).
-  
-create_responders_helper(_Command, 0, Results) ->
-  Results;
-create_responders_helper(Command, N, Results) ->
-  create_responders_helper(Command, N-1, [create_responder(Command)|Results]).
+%create_responder(Command) ->
+%  port_wrapper:wrap(Command).
+%
+%create_responders(Command, N) ->
+%  create_responders_helper(Command, N, []).
+%  
+%create_responders_helper(_Command, 0, Results) ->
+%  Results;
+%create_responders_helper(Command, N, Results) ->
+%  create_responders_helper(Command, N-1, [create_responder(Command)|Results]).
 
 handle_request(Resource, Request, ServerOptions, Timeout) ->
   {_Node, Responder} = Resource,
@@ -55,9 +55,7 @@ prepare_request(Request, ServerOptions) ->
    {pathinfo, prep(ServerOptions#sconf.docroot)},
    {postdata, Request#arg.clidata}}. % TODO: prepare request for railsification
   
-decode_result(Result) ->
-  {data, Data} = Result,
-  {response, ResponseData} = binary_to_term(Data),
+decode_result({response, ResponseData}) ->
   convert_response(ResponseData).
 
 convert_response(EhtmlTuple) ->
