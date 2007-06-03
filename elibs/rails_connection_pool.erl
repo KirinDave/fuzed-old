@@ -32,10 +32,15 @@ handle_request_helper(Arg,ServerInfo,Retries) ->
 
 %% Server manipulation
 start() -> 
-  global:register_name(?MODULE, spawn(fun() -> rails_connection_pool:loop([],[]) end)).
+  global:register_name(?MODULE, spawn(
+    fun() -> 
+      process_flag(trap_exit, true),
+      rails_connection_pool:loop([],[]) end
+    )
+  ).
 
-add(Rsrc) ->
-  global:send(?MODULE, {add, Rsrc}),
+add({Node, Proc}) when is_pid(Proc) ->
+  global:send(?MODULE, {add, {Node, Proc}}),
   ok.
 
 remove(Rsrc) ->
@@ -80,8 +85,9 @@ remove_server_filter(_Server, {_NotServer, _X}) -> true.
 
 loop([],A) ->
   receive
-    {add, I} ->
-      loop([I],[I|A]);
+    {add, {Node, Proc}} when is_pid(Proc) ->
+      erlang:link(Proc),
+      loop([{Node,Proc}],[{Node,Proc}|A]);
     {list, Pid} ->
       Pid ! {nodes, []},
       loop([],A);
@@ -95,11 +101,16 @@ loop([],A) ->
           loop([Node],A);
         true ->
           loop([],A)
-      end
+      end;
+    {'EXIT', Pid, _Reason} -> 
+      FilterFun = fun({_Node,MPid}) -> MPid /= Pid end,
+      loop([],lists:filter(FilterFun, A))
   end;
 loop(X,A) -> 
   receive 
-    {add, I} ->
+    {add, {Node, Proc}} when is_pid(Proc)->
+      erlang:link(Proc),
+      I = {Node, Proc},
       loop([I|X], [I|A]);
     {remove, I} -> 
       loop(lists:delete(I,X), lists:delete(I,A));
@@ -127,6 +138,9 @@ loop(X,A) ->
         true ->
           loop(X,A)
       end;
+    {'EXIT', Pid, _Reason} -> 
+      FilterFun = fun({_Node,MPid}) -> MPid /= Pid end,
+      loop(lists:filter(FilterFun,X),lists:filter(FilterFun, A));
     Other ->
       io:format("~p loop(X,A) Received unknown message: ~p~n", [?MODULE, Other]),
       loop(X,A)
