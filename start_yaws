@@ -1,2 +1,5 @@
 #!/bin/sh
-yaws --conf testing.conf --pa elibs -name server@volcano.local --runmod rails_connection_pool
+
+# Invoke with an argument which is the nodename
+echo "Starting yaws server with name: $@"
+yaws --conf testing.conf --pa elibs -name "$@" --runmod rails_connection_pool

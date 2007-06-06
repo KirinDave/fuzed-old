@@ -1,12 +1,10 @@
 -module(join_cluster).
 -compile(export_all).
 
-main(_X) ->
+start(Server, Command) ->
   code:add_patha("./elibs"),
   erlang:set_cookie(node(), 'AWZVAQXUPGVPKZQLYEUP'),
-  io:format("Adding 4 responders to the demo cluster: chisai.local.~n"),
-  Command = "./helloworld/script/rack.rb",
-  net_adm:ping(server@localhost), sleep_in_HEAVENLY_PEACE(2),
+  net_adm:ping(Server), sleep_in_HEAVENLY_PEACE(2),
   start_resource_manager(Command, 4).
 
 start_resource_manager(Command, N) -> 
