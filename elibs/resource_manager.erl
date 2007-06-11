@@ -6,7 +6,7 @@
 -behaviour(gen_server).
 
 %% API exports
--export([start_link/3,nodes/0,nodecount/0,change_nodecount/1,cycle/0]).
+-export([start_link/3, start/3,nodes/0,nodecount/0,change_nodecount/1,cycle/0]).
 
 %% gen_server callback exports
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -26,6 +26,8 @@
 % node serving up rails responders.
 start_link(Generator, Terminator, NumNodes) ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [Generator, Terminator, NumNodes], []).
+start(Generator, Terminator, NumNodes) ->
+    gen_server:start({local, ?MODULE}, ?MODULE, [Generator, Terminator, NumNodes], []).
 
 nodes() -> gen_server:call(?MODULE, nodes).
 nodecount() -> gen_server:call(?MODULE, nodecount).

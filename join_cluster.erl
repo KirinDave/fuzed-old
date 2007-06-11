@@ -17,7 +17,7 @@ start_resource_manager(Command, N) ->
     Responder ! shutdown,
     rails_connection_pool:remove({node(), Responder})
   end,
-  resource_manager:start_link(Spawner,Slayer,N).
+  resource_manager:start(Spawner,Slayer,N).
 
 sleep_in_HEAVENLY_PEACE(Secs) -> 
   receive
