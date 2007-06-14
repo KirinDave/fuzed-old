@@ -18,13 +18,18 @@ This project's goal is to use the YAWS webserver (and additional erlang-based in
 3. Build Fuzed:
     rake build
 4. Start yaws using the built in script:
-    ./start_yaws
+    ./start_yaws server@valid.hostname.
 5. Hit enter in the YAWS console to drop into the REPL
-6. Test your installation:
-    port_test:start_local().
+6. In another terminal:
+    ./start_node client@valid.hostname server@valid.hostname ./helloworld/script/rack.rb
 7. Point your browser at http://localhost:8002/
 8. Type various time related words into the box and watch the time appear below.
 9. Rejoice!
+
+== What is a Valid Hostname?
+  Erlang has a funny notion about what a valid hostname is. Localhost won't
+  cut it. I recommend using rendezvous to point to your local host. Short of
+  that, 127.0.0.1 works.
 
 == Contribution Notes
 * Please note that empty directories should contain a .placeholder file
