@@ -13,6 +13,8 @@ This project's goal is to use the YAWS webserver (and additional erlang-based in
 == Getting Started
 1. Download the source from Google Code:
     svn co http://fuzed.googlecode.com/svn/trunk fuzed
+1a. Alternatively, get it from the git repo:
+    git clone git://repo.or.cz/fuzed.git
 2. Change to the fuzed working copy:
     cd fuzed
 3. Build Fuzed:
