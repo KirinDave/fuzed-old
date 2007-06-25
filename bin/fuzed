@@ -1,0 +1,49 @@
+#!/usr/bin/env ruby
+
+# require 'fuzed'
+require File.join(File.dirname(__FILE__), *%w[.. lib fuzed])
+
+require 'optparse'
+require 'pp'
+
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: fuzed command [options]"
+
+  opts.on("-c CONFIG", "--config CONFIG", "Path to Yaws config file") do |n|
+    options[:config] = n
+  end
+  
+  opts.on("-n NAME", "--name NAME", "Node name") do |n|
+    options[:name] = n
+  end
+  
+  opts.on("-m NAME", "--master NAME", "Master node name") do |n|
+    options[:master_name] = n
+  end
+  
+  opts.on("-a ADAPTER", "--adapter ADAPTER", "Path to adapter script") do |a|
+    options[:adapter] = a
+  end
+end.parse!
+  
+command = ARGV[0]
+
+case command
+when 'start'
+  config = options[:config]
+  nodename = options[:name]
+  
+  puts "Starting yaws server with name: #{nodename}"
+  system %Q{yaws --conf #{config} --pa #{Fuzed.relative 'elibs'} -name "#{nodename}" --runmod rails_connection_pool}
+when 'join'
+  nodename = options[:name]
+  master = options[:master_name]
+  adapter = options[:adapter]
+  
+  puts "Starting a client named #{nodename} offering service to #{master}"
+  puts "Each node will run: '#{adapter}'"
+  system %Q{cd #{Fuzed.root}; erl -noshell -name #{nodename} -eval "join_cluster:start('#{master}','#{adapter}')."}
+else
+  puts 'Invalid command'
+end

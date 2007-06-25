@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+
+rails_public_dir = ARGV[0]
+
+template = File.join(File.dirname(__FILE__), *%w[.. templates fuzed.conf])
+
+conf = File.open(template).read
+conf.gsub!('{{ RAILS_PUBLIC_DIR }}', rails_public_dir)
+
+File.open('fuzed.conf', 'w') do |f|
+  f.write conf
+end
+
+puts 'successfully wrote fuzed.conf in current directory'

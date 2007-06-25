@@ -1,6 +1,6 @@
 -module(test_rails_handler).
 -author('klacke@bluetail.com').
--include("yaws_includes/yaws_api.hrl").
+-include("../yaws_includes/yaws_api.hrl").
 -compile(export_all).
 
 

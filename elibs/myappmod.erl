@@ -1,7 +1,7 @@
 -module(myappmod).
 -author('klacke@bluetail.com').
 
--include("yaws_includes/yaws_api.hrl").
+-include("../yaws_includes/yaws_api.hrl").
 -compile(export_all).
 
 box(Str) ->
