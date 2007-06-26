@@ -15,7 +15,6 @@ Leverage the YAWS webserver (and additional erlang-based infrastructure) to run 
   * rake: http://rake.rubyforge.org
   * erlectricty: http://code.google.com/p/erlectricity
   * rack: http://rack.rubyforge.org
-  * chronic (for the demo): http://chronic.rubyforge.org
 
 
 == Installation (from gem)
@@ -53,7 +52,7 @@ be suitable for initial testing.
 
 Start the fuzed master server (yaws) locally:
 
-  fuzed start -n server@127.0.0.1 -c fuzed.conf
+  sudo fuzed start -n server@127.0.0.1 -c fuzed.conf
   
 In another terminal, start a fuzed client locally:
 
@@ -63,7 +62,7 @@ where RAILS_ROOT is the same as before.
     
 Point your browser at:
 
-  http://localhost:8002/
+  http://localhost
   
 If everything worked out, you'll see your Rails app!
 
