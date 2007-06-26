@@ -1,10 +1,12 @@
 #!/usr/bin/env ruby
 
+puts("You must specify the absolute path to your Rails root as the first argument") and exit unless ARGV[0]
+
+rails_public_dir = File.join(ARGV[0], 'public')
+
 SUBSTITUTIONS = 
-  {:rails_public_dir => ARGV[0],
+  {:rails_public_dir => rails_public_dir,
    :port             => ARGV[1] || "80"}
-
-
 
 template = File.join(File.dirname(__FILE__), *%w[.. templates fuzed.conf])
 

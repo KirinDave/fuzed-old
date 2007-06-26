@@ -41,18 +41,19 @@ Build Fuzed:
 
 Generate a starter Yaws config file with:
 
-  fuzedconf RAILS_ROOT
+  fuzedconf RAILS_ROOT 8080
   
-where RAILS_ROOT is the absolute path to the root directory of your Rails project.
-This will generate a file called 'fuzed.conf' which contains a sample Yaws config file that should
-be suitable for initial testing.
+where RAILS_ROOT is the absolute path to the root directory of your Rails project. You may
+optionally specify a port as the second argument. This will generate a file called
+'fuzed.conf' which contains a sample Yaws config file that should be suitable for initial
+testing.
 
 
 == Starting fuzed
 
 Start the fuzed master server (yaws) locally:
 
-  sudo fuzed start -n server@127.0.0.1 -c fuzed.conf
+  fuzed start -n server@127.0.0.1 -c fuzed.conf
   
 In another terminal, start a fuzed client locally:
 
