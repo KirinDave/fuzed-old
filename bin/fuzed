@@ -22,8 +22,8 @@ OptionParser.new do |opts|
     options[:master_name] = n
   end
   
-  opts.on("-a ADAPTER", "--adapter ADAPTER", "Path to adapter script") do |a|
-    options[:adapter] = a
+  opts.on("-r RAILS_ROOT", "--rails RAILS_ROOT", "Path to Rails root") do |a|
+    options[:rails] = a
   end
 end.parse!
   
@@ -39,11 +39,11 @@ when 'start'
 when 'join'
   nodename = options[:name]
   master = options[:master_name]
-  adapter = options[:adapter]
+  rails = options[:rails]
   
   puts "Starting a client named #{nodename} offering service to #{master}"
-  puts "Each node will run: '#{adapter}'"
-  system %Q{cd #{Fuzed.root}; erl -noshell -name #{nodename} -eval "join_cluster:start('#{master}','#{adapter}')."}
+  puts "Each node will run: '#{Fuzed.relative 'lib/fuzed/rack.rb'} #{rails}'"
+  system %Q{cd #{Fuzed.root}; erl -noshell -name #{nodename} -eval "join_cluster:start('#{master}','#{Fuzed.relative 'lib/fuzed/rack.rb'} #{rails}')."}
 else
   puts 'Invalid command'
 end
