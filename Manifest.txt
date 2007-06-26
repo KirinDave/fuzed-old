@@ -6,8 +6,6 @@ Rakefile
 bin/fuzed
 bin/fuzed-adapter
 bin/fuzed-conf
-elibs/myappmod.beam
-elibs/myappmod.erl
 elibs/port_wrapper.beam
 elibs/port_wrapper.erl
 elibs/rails_connection_pool.beam
