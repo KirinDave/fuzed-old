@@ -43,7 +43,7 @@ when 'join'
   
   puts "Starting a client named #{nodename} offering service to #{master}"
   puts "Each node will run: 'fuzed-adapter #{rails}'"
-  system %Q{cd #{Fuzed.root}; erl -noshell -name #{nodename} -eval "join_cluster:start('#{master}','fuzed-adapter' #{rails}')."}
+  system %Q{cd #{Fuzed.root}; erl -noshell -name #{nodename} -eval "join_cluster:start('#{master}','fuzed-adapter #{rails}')."}
 else
   puts 'Invalid command'
 end

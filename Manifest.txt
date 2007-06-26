@@ -4,7 +4,8 @@ Manifest.txt
 README.txt
 Rakefile
 bin/fuzed
-bin/fuzedconf
+bin/fuzed-adapter
+bin/fuzed-conf
 elibs/myappmod.beam
 elibs/myappmod.erl
 elibs/port_wrapper.beam
@@ -17,12 +18,11 @@ elibs/resource_manager.beam
 elibs/resource_manager.erl
 elibs/test_rails_handler.beam
 elibs/test_rails_handler.erl
-fuzed.conf
 join_cluster.beam
 join_cluster.erl
 lib/fuzed.rb
-lib/fuzed/rack.rb
 rails_responder
+sample.fuzed.conf
 start_node
 start_yaws
 templates/fuzed.conf
