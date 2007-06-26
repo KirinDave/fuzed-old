@@ -1,11 +1,18 @@
 #!/usr/bin/env ruby
 
-rails_public_dir = ARGV[0]
+SUBSTITUTIONS = 
+  {:rails_public_dir => ARGV[0],
+   :port             => ARGV[1] || "80"}
+
+
 
 template = File.join(File.dirname(__FILE__), *%w[.. templates fuzed.conf])
 
 conf = File.open(template).read
-conf.gsub!('{{ RAILS_PUBLIC_DIR }}', rails_public_dir)
+SUBSTITUTIONS.each_pair do |key, data|
+  repl_key = '{{ ' + key.to_s.upcase + ' }}'
+  conf.gsub!(repl_key, data)
+end
 
 File.open('fuzed.conf', 'w') do |f|
   f.write conf
