@@ -57,7 +57,7 @@ Start the fuzed master server (yaws) locally:
   
 In another terminal, start a fuzed client locally:
 
-  fuzed join -n client@127.0.0.1 -m server@127.0.0.1 -a /Users/tom/dev/git/fuzed/helloworld/script/rack.rb
+  fuzed join -n client@127.0.0.1 -m server@127.0.0.1 -r /Users/tom/dev/git/fuzed/helloworld
     
 Point your browser at:
 
