@@ -24,3 +24,7 @@ task :build do
   end
 end
 
+desc 'Generate manifest from git files'
+task :manifest do
+  sh 'git ls-tree --name-only -r HEAD > Manifest.txt'
+end
