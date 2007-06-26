@@ -41,7 +41,7 @@ Build Fuzed:
 
 Generate a starter Yaws config file with:
 
-  fuzedconf RAILS_ROOT 8080
+  fuzed-conf RAILS_ROOT 8080
   
 where RAILS_ROOT is the absolute path to the root directory of your Rails project. You may
 optionally specify a port as the second argument. This will generate a file called
