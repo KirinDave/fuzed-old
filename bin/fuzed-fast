@@ -1,0 +1,12 @@
+#!/bin/sh
+
+CWD=`pwd`
+RAILS_ROOT="$CWD/public"
+MASTER_NAME="server@`hostname`"
+CLIENT_NAME="demo_client@`hostname`"
+
+echo fuzed-conf $RAILS_ROOT 3000 
+echo mv fuzed.conf /tmp
+echo fuzed --config /tmp/fuzed.conf -n $MASTER_NAME -r $RAILS_ROOT  & 
+echo fuzed --config /tmp/fuzed.conf -m $MASTER_NAME -n $CLIENT_NAME &
+echo "Waiting for connections on http://localhost:3000"
