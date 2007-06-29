@@ -28,3 +28,8 @@ desc 'Generate manifest from git files'
 task :manifest do
   sh 'git ls-tree --name-only -r HEAD > Manifest.txt'
 end
+
+desc "Upload site to Rubyforge"
+task :site do
+  sh "scp -r site/* mojombo@god.rubyforge.org:/var/www/gforge-projects/fuzed"
+end
