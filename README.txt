@@ -4,7 +4,8 @@ fuzed
     
     
 == Summary
-Leverage the YAWS webserver (and additional erlang-based infrastructure) to run Rails.
+Leverage the YAWS webserver (and additional erlang-based infrastructure) to
+run Rails.
 
 
 == Dependencies
@@ -39,16 +40,20 @@ Build Fuzed:
 
 == Configuration
 
-Create a shared Erlang cookie on each machine. In order for Erlang processes in different interpreters to communicate with each other, they each need to be able to find a file called .erlang.cookie in the home directory of the user under which they are running. The cookie should contain 20 uppercase alpha characters on a single line (no newline).
+Create a shared Erlang cookie on each machine. In order for Erlang processes in
+different interpreters to communicate with each other, they each need to be
+able to find a file called .erlang.cookie in the home directory of the user
+under which they are running. The cookie should contain 20 uppercase alpha
+characters on a single line (no newline).
 
 Generate a starter Yaws config file with:
 
   fuzed-conf RAILS_ROOT 8080
   
-where RAILS_ROOT is the absolute path to the root directory of your Rails project. You may
-optionally specify a port as the second argument. This will generate a file called
-'fuzed.conf' which contains a sample Yaws config file that should be suitable for initial
-testing.
+where RAILS_ROOT is the absolute path to the root directory of your Rails
+project. You may optionally specify a port as the second argument. This will
+generate a file called 'fuzed.conf' which contains a sample Yaws config file
+that should be suitable for initial testing.
 
 
 == Starting fuzed
