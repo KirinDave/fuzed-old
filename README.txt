@@ -39,6 +39,8 @@ Build Fuzed:
 
 == Configuration
 
+Create a shared Erlang cookie on each machine. In order for Erlang processes in different interpreters to communicate with each other, they each need to be able to find a file called .erlang.cookie in the home directory of the user under which they are running. The cookie should contain 20 uppercase alpha characters on a single line (no newline).
+
 Generate a starter Yaws config file with:
 
   fuzed-conf RAILS_ROOT 8080
