@@ -40,15 +40,15 @@ context "When unpacking from a binary stream" do
   #   get("#{(1 << (512 * 8)) }").should == (1 << (512 * 8))
   #   get("#{-(1 << (512 * 8))}").should == -(1 << (512 * 8))
   # end
-  # 
-  # specify "an erlang float should decode to a Float" do
-  #   get("#{1.0}").should == 1.0
-  #   get("#{-1.0}").should == -1.0
-  #   get("#{123.456}").should == 123.456
-  #   get("#{123.456789012345}").should == 123.456789012345
-  # end
-  # 
-  # 
+  
+  specify "an erlang float should decode to a Float" do
+    get("#{1.0}").should == 1.0
+    get("#{-1.0}").should == -1.0
+    get("#{123.456}").should == 123.456
+    get("#{123.456789012345}").should == 123.456789012345
+  end
+  
+  
   # specify "an erlang reference should decode to a Reference object" do
   #   ref = get("make_ref()")
   #   ref.should.be.instance_of Erlectricity::NewReference
@@ -78,19 +78,19 @@ context "When unpacking from a binary stream" do
     ref.length.should == 255
     ref.each{|r| r.should == 3}
   end
-  # 
-  # 
-  # specify "an erlang tuple encoded as a large tuple (4-byte length) should decode to an array" do
-  #   tuple_meat = (['3'] * 256).join(', ')
-  #   ref = get("{#{tuple_meat}}")
-  #   ref.length.should == 256
-  #   ref.each{|r| r.should == 3}
-  #   
-  #   tuple_meat = (['3'] * 512).join(', ')
-  #   ref = get("{#{tuple_meat}}")
-  #   ref.length.should == 512
-  #   ref.each{|r| r.should == 3}
-  # end
+  
+  
+  specify "an erlang tuple encoded as a large tuple (4-byte length) should decode to an array" do
+    tuple_meat = (['3'] * 256).join(', ')
+    ref = get("{#{tuple_meat}}")
+    ref.length.should == 256
+    ref.each{|r| r.should == 3}
+    
+    tuple_meat = (['3'] * 512).join(', ')
+    ref = get("{#{tuple_meat}}")
+    ref.length.should == 512
+    ref.each{|r| r.should == 3}
+  end
   
   
   specify "an empty erlang list encoded as a nil should decode to an array" do
@@ -116,7 +116,7 @@ context "When unpacking from a binary stream" do
   
   def get(str)
     bin = run_erl("term_to_binary(#{str})")
-    # p bin
+    p bin
     Erlectricity::Decoder.read_any_from(bin)
   end
 end

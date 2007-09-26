@@ -274,6 +274,19 @@ VALUE read_large_bignum(unsigned char **pData) {
   return num;
 }
 
+VALUE read_float(unsigned char **pData) {
+  if(read_1(pData) != FLOAT) {
+    rb_raise(rb_eStandardError, "Invalid Type, not a float");
+  }
+  
+  unsigned char buf[32];
+  read_string_raw(buf, pData, 31);
+  
+  VALUE rString = rb_str_new2((char *) buf);
+  
+  return rb_funcall(rString, rb_intern("to_f"), 0);
+}
+
 VALUE read_nil(unsigned char **pData) {
   if(read_1(pData) != NIL) {
     rb_raise(rb_eStandardError, "Invalid Type, not a nil list");
@@ -289,6 +302,9 @@ VALUE read_any_raw(unsigned char **pData) {
       break;
     case 98:
       return read_int(pData);
+      break;
+    case 99:
+      return read_float(pData);
       break;
     case 100:
       return read_atom(pData);
