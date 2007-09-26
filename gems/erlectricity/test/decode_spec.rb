@@ -116,7 +116,7 @@ context "When unpacking from a binary stream" do
   
   def get(str)
     bin = run_erl("term_to_binary(#{str})")
-    p bin
+    # p bin
     Erlectricity::Decoder.read_any_from(bin)
   end
 end

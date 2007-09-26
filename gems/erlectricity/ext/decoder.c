@@ -1,34 +1,25 @@
 #include "ruby.h"
-#include <stdlib.h>
 #include <string.h>
 
-// constants
-static int VERSION = 131;
-
-static int SMALL_INT = 97;
-static int INT = 98;
-
-static int SMALL_BIGNUM = 110;
-static int LARGE_BIGNUM = 111;
-
-static int FLOAT = 99;
-
-static int ATOM = 100;
-static int REF = 101;           // old style reference
-static int NEW_REF = 114;
-static int PORT = 102;          // not supported accross node boundaries
-static int PID = 103;
-
-static int SMALL_TUPLE = 104;
-static int LARGE_TUPLE = 105;
-
-static int NIL = 106;
-static int STRING = 107;
-static int LIST = 108;
-static int BIN = 109;
-
-static int FUN = 117;
-static int NEW_FUN = 112;
+#define ERL_VERSION       131
+#define ERL_SMALL_INT     97
+#define ERL_INT           98
+#define ERL_SMALL_BIGNUM  110
+#define ERL_LARGE_BIGNUM  111
+#define ERL_FLOAT         99
+#define ERL_ATOM          100
+#define ERL_REF           101
+#define ERL_NEW_REF       114
+#define ERL_PORT          102
+#define ERL_PID           103
+#define ERL_SMALL_TUPLE   104
+#define ERL_LARGE_TUPLE   105
+#define ERL_NIL           106
+#define ERL_STRING        107
+#define ERL_LIST          108
+#define ERL_BIN           109
+#define ERL_FUN           117
+#define ERL_NEW_FUN       112
 
 static VALUE mErlectricity;
 static VALUE cDecoder;
@@ -85,7 +76,7 @@ unsigned int read_4(unsigned char **pData) {
 // tuples, lists
 
 VALUE read_small_tuple(unsigned char **pData) {
-  if(read_1(pData) != SMALL_TUPLE) {
+  if(read_1(pData) != ERL_SMALL_TUPLE) {
     rb_raise(rb_eStandardError, "Invalid Type, not a small tuple");
   }
   
@@ -102,7 +93,7 @@ VALUE read_small_tuple(unsigned char **pData) {
 }
 
 VALUE read_large_tuple(unsigned char **pData) {
-  if(read_1(pData) != LARGE_TUPLE) {
+  if(read_1(pData) != ERL_LARGE_TUPLE) {
     rb_raise(rb_eStandardError, "Invalid Type, not a large tuple");
   }
   
@@ -119,7 +110,7 @@ VALUE read_large_tuple(unsigned char **pData) {
 }
 
 VALUE read_list(unsigned char **pData) {
-  if(read_1(pData) != LIST) {
+  if(read_1(pData) != ERL_LIST) {
     rb_raise(rb_eStandardError, "Invalid Type, not an erlang list");
   }
   
@@ -145,7 +136,7 @@ void read_string_raw(unsigned char *dest, unsigned char **pData, int length) {
 
 VALUE read_bin(unsigned char **pData) {
   // fail("Invalid Type, not an erlang binary") unless read_1 == BIN
-  if(read_1(pData) != BIN) {
+  if(read_1(pData) != ERL_BIN) {
     rb_raise(rb_eStandardError, "Invalid Type, not an erlang binary");
   }
   
@@ -158,7 +149,7 @@ VALUE read_bin(unsigned char **pData) {
 }
 
 VALUE read_string(unsigned char **pData) {
-  if(read_1(pData) != STRING) {
+  if(read_1(pData) != ERL_STRING) {
     rb_raise(rb_eStandardError, "Invalid Type, not an erlang string");
   }
   
@@ -178,7 +169,7 @@ VALUE read_string(unsigned char **pData) {
 }
 
 VALUE read_atom(unsigned char **pData) {
-  if(read_1(pData) != 100) {
+  if(read_1(pData) != ERL_ATOM) {
     rb_raise(rb_eStandardError, "Invalid Type, not an atom");
   }
   
@@ -191,7 +182,7 @@ VALUE read_atom(unsigned char **pData) {
 }
 
 VALUE read_small_int(unsigned char **pData) {
-  if(read_1(pData) != 97) {
+  if(read_1(pData) != ERL_SMALL_INT) {
     rb_raise(rb_eStandardError, "Invalid Type, not a small int");
   }
   
@@ -201,7 +192,7 @@ VALUE read_small_int(unsigned char **pData) {
 }
 
 VALUE read_int(unsigned char **pData) {
-  if(read_1(pData) != 98) {
+  if(read_1(pData) != ERL_INT) {
     rb_raise(rb_eStandardError, "Invalid Type, not an int");
   }
   
@@ -217,7 +208,7 @@ VALUE read_int(unsigned char **pData) {
 }
 
 VALUE read_small_bignum(unsigned char **pData) {
-  if(read_1(pData) != SMALL_BIGNUM) {
+  if(read_1(pData) != ERL_SMALL_BIGNUM) {
     rb_raise(rb_eStandardError, "Invalid Type, not a small bignum");
   }
   
@@ -246,7 +237,7 @@ VALUE read_small_bignum(unsigned char **pData) {
 }
 
 VALUE read_large_bignum(unsigned char **pData) {
-  if(read_1(pData) != LARGE_BIGNUM) {
+  if(read_1(pData) != ERL_LARGE_BIGNUM) {
     rb_raise(rb_eStandardError, "Invalid Type, not a small bignum");
   }
   
@@ -275,7 +266,7 @@ VALUE read_large_bignum(unsigned char **pData) {
 }
 
 VALUE read_float(unsigned char **pData) {
-  if(read_1(pData) != FLOAT) {
+  if(read_1(pData) != ERL_FLOAT) {
     rb_raise(rb_eStandardError, "Invalid Type, not a float");
   }
   
@@ -288,7 +279,7 @@ VALUE read_float(unsigned char **pData) {
 }
 
 VALUE read_nil(unsigned char **pData) {
-  if(read_1(pData) != NIL) {
+  if(read_1(pData) != ERL_NIL) {
     rb_raise(rb_eStandardError, "Invalid Type, not a nil list");
   }
   
@@ -298,7 +289,7 @@ VALUE read_nil(unsigned char **pData) {
 // specials
 
 VALUE read_pid(unsigned char **pData) {
-  if(read_1(pData) != PID) {
+  if(read_1(pData) != ERL_PID) {
     rb_raise(rb_eStandardError, "Invalid Type, not a pid");
   }
   
@@ -312,7 +303,7 @@ VALUE read_pid(unsigned char **pData) {
 }
 
 VALUE read_new_reference(unsigned char **pData) {
-  if(read_1(pData) != NEW_REF) {
+  if(read_1(pData) != ERL_NEW_REF) {
     rb_raise(rb_eStandardError, "Invalid Type, not a new-style reference");
   }
   
@@ -335,46 +326,46 @@ VALUE read_new_reference(unsigned char **pData) {
 
 VALUE read_any_raw(unsigned char **pData) {
   switch(peek_1(pData)) {
-    case 97:
+    case ERL_SMALL_INT:
       return read_small_int(pData);
       break;
-    case 98:
+    case ERL_INT:
       return read_int(pData);
       break;
-    case 99:
+    case ERL_FLOAT:
       return read_float(pData);
       break;
-    case 100:
+    case ERL_ATOM:
       return read_atom(pData);
       break;
-    case 103:
+    case ERL_PID:
       return read_pid(pData);
       break;
-    case 104:
+    case ERL_SMALL_TUPLE:
       return read_small_tuple(pData);
       break;
-    case 105:
+    case ERL_LARGE_TUPLE:
       return read_large_tuple(pData);
       break;
-    case 106:
+    case ERL_NIL:
       return read_nil(pData);
       break;
-    case 107:
+    case ERL_STRING:
       return read_string(pData);
       break;
-    case 108:
+    case ERL_LIST:
       return read_list(pData);
       break;
-    case 109:
+    case ERL_BIN:
       return read_bin(pData);
       break;
-    case 110:
+    case ERL_SMALL_BIGNUM:
       return read_small_bignum(pData);
       break;
-    case 111:
+    case ERL_LARGE_BIGNUM:
       return read_large_bignum(pData);
       break;
-    case 114:
+    case ERL_NEW_REF:
       return read_new_reference(pData);
       break;
   }
@@ -387,7 +378,7 @@ VALUE method_read_any_from(VALUE klass, VALUE rString) {
   unsigned char **pData = &data;
   
   // check protocol version
-  if(read_1(pData) != VERSION) {
+  if(read_1(pData) != ERL_VERSION) {
     rb_raise(rb_eStandardError, "Bad Magic");
   }
   
