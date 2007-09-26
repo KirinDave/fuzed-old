@@ -49,17 +49,17 @@ context "When unpacking from a binary stream" do
   end
   
   
-  # specify "an erlang reference should decode to a Reference object" do
-  #   ref = get("make_ref()")
-  #   ref.should.be.instance_of Erlectricity::NewReference
-  #   ref.node.should.be.instance_of Symbol
-  # end
-  # 
-  # specify "an erlang pid should decode to a Pid object" do
-  #   pid = get("spawn(fun() -> 3 end)")
-  #   pid.should.be.instance_of Erlectricity::Pid
-  #   pid.node.should.be.instance_of Symbol
-  # end
+  specify "an erlang reference should decode to a Reference object" do
+    ref = get("make_ref()")
+    ref.should.be.instance_of Erlectricity::NewReference
+    ref.node.should.be.instance_of Symbol
+  end
+  
+  specify "an erlang pid should decode to a Pid object" do
+    pid = get("spawn(fun() -> 3 end)")
+    pid.should.be.instance_of Erlectricity::Pid
+    pid.node.should.be.instance_of Symbol
+  end
   
   
   specify "an erlang tuple encoded as a small tuple (1-byte length) should decode to an array" do
@@ -67,11 +67,11 @@ context "When unpacking from a binary stream" do
     ref.length.should == 1
     ref.first.should == 3
   
-    # ref = get("{3, a, make_ref()}")
-    # ref.length.should == 3
-    # ref[0].should == 3
-    # ref[1].should == :a
-    # ref[2].class.should == Erlectricity::NewReference
+    ref = get("{3, a, make_ref()}")
+    ref.length.should == 3
+    ref[0].should == 3
+    ref[1].should == :a
+    ref[2].class.should == Erlectricity::NewReference
   
     tuple_meat = (['3'] * 255).join(', ')
     ref = get("{#{tuple_meat}}")

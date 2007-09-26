@@ -295,6 +295,44 @@ VALUE read_nil(unsigned char **pData) {
   return rb_ary_new2(0);
 }
 
+// specials
+
+VALUE read_pid(unsigned char **pData) {
+  if(read_1(pData) != PID) {
+    rb_raise(rb_eStandardError, "Invalid Type, not a pid");
+  }
+  
+  VALUE node = read_atom(pData);
+  VALUE id = INT2NUM(read_4(pData));
+  VALUE serial = INT2NUM(read_4(pData));
+  VALUE creation = INT2FIX(read_1(pData));
+  
+  VALUE pid_class = rb_const_get(mErlectricity, rb_intern("Pid"));
+  return rb_funcall(pid_class, rb_intern("new"), 4, node, id, serial, creation);
+}
+
+VALUE read_new_reference(unsigned char **pData) {
+  if(read_1(pData) != NEW_REF) {
+    rb_raise(rb_eStandardError, "Invalid Type, not a new-style reference");
+  }
+  
+  VALUE size = INT2NUM(read_2(pData));
+  VALUE node = read_atom(pData);
+  VALUE creation = INT2FIX(read_1(pData));
+  
+  VALUE parts[size];
+  int i;
+  for(i = 0; i < size; ++i) {
+    parts[i] = INT2NUM(read_4(pData));
+  }
+  VALUE id = rb_ary_new4(size, parts);
+  
+  VALUE newref_class = rb_const_get(mErlectricity, rb_intern("NewReference"));
+  return rb_funcall(newref_class, rb_intern("new"), 3, node, creation, id);
+}
+
+// read_any_raw
+
 VALUE read_any_raw(unsigned char **pData) {
   switch(peek_1(pData)) {
     case 97:
@@ -308,6 +346,9 @@ VALUE read_any_raw(unsigned char **pData) {
       break;
     case 100:
       return read_atom(pData);
+      break;
+    case 103:
+      return read_pid(pData);
       break;
     case 104:
       return read_small_tuple(pData);
@@ -332,6 +373,9 @@ VALUE read_any_raw(unsigned char **pData) {
       break;
     case 111:
       return read_large_bignum(pData);
+      break;
+    case 114:
+      return read_new_reference(pData);
       break;
   }
   return Qnil;
