@@ -82,7 +82,7 @@ unsigned int read_4(unsigned char **pData) {
   return val;
 }
 
-// tuples
+// tuples, lists
 
 VALUE read_small_tuple(unsigned char **pData) {
   if(read_1(pData) != SMALL_TUPLE) {
@@ -93,8 +93,8 @@ VALUE read_small_tuple(unsigned char **pData) {
   
   VALUE array = rb_ary_new2(arity);
   
-  int i = 0;
-  for(i; i < arity; ++i) {
+  int i;
+  for(i = 0; i < arity; ++i) {
     rb_ary_store(array, i, read_any_raw(pData));
   }
   
@@ -110,8 +110,25 @@ VALUE read_large_tuple(unsigned char **pData) {
   
   VALUE array = rb_ary_new2(arity);
   
-  int i = 0;
-  for(i; i < arity; ++i) {
+  int i;
+  for(i = 0; i < arity; ++i) {
+    rb_ary_store(array, i, read_any_raw(pData));
+  }
+  
+  return array;
+}
+
+VALUE read_list(unsigned char **pData) {
+  if(read_1(pData) != LIST) {
+    rb_raise(rb_eStandardError, "Invalid Type, not an erlang list");
+  }
+  
+  int size = read_4(pData);
+  
+  VALUE array = rb_ary_new2(size);
+  
+  int i;
+  for(i = 0; i < size; ++i) {
     rb_ary_store(array, i, read_any_raw(pData));
   }
   
@@ -287,6 +304,9 @@ VALUE read_any_raw(unsigned char **pData) {
       break;
     case 107:
       return read_string(pData);
+      break;
+    case 108:
+      return read_list(pData);
       break;
     case 109:
       return read_bin(pData);
