@@ -9,10 +9,14 @@ require 'erlectricity'
 require 'stringio'
 require 'logger'
 
+LOG = false
+
+$total_avg = [0, 0]
+$rails_avg = [0, 0]
 $logger = Logger.new(RAILS_ROOT + "/log/fuzed.#{Process.pid}.log")
 
 def log(msg)
-  $logger.info(msg)
+  $logger << msg + "\n"
 end
 
 module Rack
@@ -27,30 +31,41 @@ module Rack
       end
       
       def listen
-        log "Waiting for connections"
+        log "Waiting for connections" if LOG
         
         me = self
         
-        receive(IO.new(3), IO.new(4)) do
-          match(:request, list(:request)) do
+        receive(IO.new(3), IO.new(4)) do |f|
+          f.when(:request, Array) do |request|
             $t = Time.now
             log('------------MATCH------------')
             log request.inspect
             res = me.service(request)
-            send!(res)
-            log(">> Total in " + (Time.now - $t).to_s + " sec\n")
-            receive_loop
+            
+            # res = [:response, 
+            # [[:status, 200],
+            #  [:allheaders, [
+            #    [:header, "Content-Type", "text/plain; charset=utf-8"], 
+            #    [:header, "Cache-Control", "no-cache"]]], 
+            #  [:html, "ok"]]]
+            
+            f.send!(res)
+            total_delta = Time.now - $t
+            $total_avg[0] += total_delta
+            $total_avg[1] += 1
+            log(">> Total in #{total_delta} (#{$total_avg[0] / $total_avg[1]} avg) sec\n") if LOG
+            f.receive_loop
           end
           
-          match(:ping) do
-            send!(:pong)
-            receive_loop
+          f.when(:ping) do
+            f.send!(:pong)
+            f.receive_loop
           end
           
-          match(any(:any)) do
-            log('------------NO-MATCH------------')
-            log any.inspect
-            receive_loop
+          f.when(Any) do |obj|
+            log('------------NO-MATCH------------') if LOG
+            log any.inspect if LOG
+            f.receive_loop
           end
         end
       end
@@ -88,16 +103,16 @@ module Rack
         env = headers.inject(env) { |a, x| a[translate[x[0]] || x[0].to_s] = x[1]; a }
         env.delete_if { |k, v| v.nil? }
         
-        env.update({"rack.version" => [0,2],
-                     "rack.input" => StringIO.new(postdata),
-                     "rack.errors" => STDERR,
-                     
-                     "rack.multithread" => true,
-                     "rack.multiprocess" => false,
-                     "rack.run_once" => false,
-                     
-                     "rack.url_scheme" => ["yes", "on", "1"].include?(ENV["HTTPS"]) ? "https" : "http"
-                   })
+        env.update({"rack.version" => [0, 1],
+                    "rack.input" => StringIO.new(postdata),
+                    "rack.errors" => STDERR,
+                    
+                    "rack.multithread" => true,
+                    "rack.multiprocess" => false,
+                    "rack.run_once" => false,
+                    
+                    "rack.url_scheme" => ["yes", "on", "1"].include?(ENV["HTTPS"]) ? "https" : "http"
+                  })
                    
         env['SERVER_NAME'] = server.split(':')[0]
         env['SERVER_PORT'] = server.split(':')[1]
@@ -112,13 +127,22 @@ module Rack
           env["HTTP_COOKIE"] = cookie.to_s
         end
         
-        log('------------IN------------')
-        log(env.inspect)
+        log('------------IN------------') if LOG
+        log(env.inspect) if LOG
         
         begin
           t1 = Time.now
+          
+          # status = '200'
+          # headers = {}
+          # body = ['foo']
+          
           status, headers, body = @app.call(env)
-          log(">> Rails in " + (Time.now - t1).to_s + " sec")
+          
+          rails_delta = Time.now - t1
+          $rails_avg[0] += rails_delta
+          $rails_avg[1] += 1
+          log(">> Rails in #{rails_delta} (#{$rails_avg[0] / $rails_avg[1]} avg) sec") if LOG
         
           html = ''
           body.each do |part|
@@ -133,6 +157,9 @@ module Rack
           headers['Set-Cookie'] = cookies if cookies
           
           # p headers
+          
+          status = (headers["Status"].split(" ").first rescue nil) || status
+          headers.delete("Status") if headers["Status"]
 
           res = 
           [:response,
@@ -149,8 +176,8 @@ module Rack
              [:html, "500 Internal Error\n\n#{e}\n\n#{e.backtrace}"]]]
         end
           
-        log('-----------OUT------------')
-        log(res.inspect)
+        log('-----------OUT------------') if LOG
+        log(res.inspect) if LOG
         
         res
       end
@@ -209,7 +236,7 @@ module Rack
             @response['Content-Type'] = options.delete('type') || "text/html"
             @response['Content-Type'] += "; charset=" + options.delete('charset') if options['charset']
                         
-            @response['Status'] = options.delete('status') if options['status']
+            @response['Status'] = options.delete('Status') if options['Status']
             @response['Content-Language'] = options.delete('language') if options['language']
             @response['Expires'] = options.delete('expires') if options['expires']
         
@@ -236,7 +263,7 @@ module Rack
         end
                         
         def params
-          @request.params
+          @params ||= @request.params
         end
         
         def cookies

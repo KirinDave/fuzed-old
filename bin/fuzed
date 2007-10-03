@@ -47,3 +47,7 @@ when 'join'
 else
   puts 'Invalid command'
 end
+
+__END__
+
+ruby-prof -p graph_html -f graph.html
