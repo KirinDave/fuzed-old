@@ -51,10 +51,10 @@ handle_request_helper(Arg,ServerInfo,Retries) ->
 %
 
 start_link() ->
-  gen_server:start_link({global, ?MODULE}, [[]], []).
+  gen_server:start_link({global, ?MODULE}, ?MODULE, [[]], []).
 
 start() ->
-  gen_server:start({global, ?MODULE}, [[]], []).
+  gen_server:start({global, ?MODULE}, ?MODULE, [[]], []).
 
 add(Rsrc) ->
   gen_server:cast({global, ?MODULE}, {add, Rsrc}).
