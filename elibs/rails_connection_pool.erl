@@ -1,5 +1,10 @@
 -module(rails_connection_pool). 
 -compile(export_all).
+%% gen_server callbacks
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2,
+	 terminate/2, code_change/3]).
+
+-behaviour(gen_server).
 
 
 %% Convenience Function
@@ -30,118 +35,146 @@ handle_request_helper(Arg,ServerInfo,Retries) ->
   end.
   
 
-%% Server manipulation
-start() -> 
-  global:register_name(?MODULE, spawn(
-    fun() -> 
-      process_flag(trap_exit, true),
-      rails_connection_pool:loop([],[]) end
-    )
-  ).
+% State Record
 
-add({Node, Proc}) when is_pid(Proc) ->
-  global:send(?MODULE, {add, {Node, Proc}}),
-  ok.
+-record(state, 
+  {
+   active_nodes = [],
+   nodes = [],
+   pending_requests = queue:new(),
+   details = []
+  }
+).
+
+%
+%% API
+%
+
+start_link() ->
+  gen_server:start_link({global, ?MODULE}, [[]], []).
+
+start() ->
+  gen_server:start({global, ?MODULE}, [[]], []).
+
+add(Rsrc) ->
+  gen_server:cast({global, ?MODULE}, {add, Rsrc}).
 
 remove(Rsrc) ->
-  global:send(?MODULE, {remove, Rsrc}),
-  ok.
+  gen_server:cast({global, ?MODULE}, {remove, Rsrc}).
 
 get() ->
-  global:send(?MODULE, {get, self()}),
-  receive
-    {node, X} -> 
-      X
+  gen_server:cast({global, ?MODULE}, {get, self()}),
+  receive 
+    {resource, Rsrc} -> Rsrc
   end.
+
 
 refund(Node) ->
-  global:send(?MODULE, {refund, Node}),
-  ok.
+  gen_server:call({global, ?MODULE}, {refund, Node}).
 
 list() ->
-  global:send(?MODULE, {list, self()}),
-  receive
-    {nodes, A} ->
-      A
-  end.
+  gen_server:call({global, ?MODULE}, {list}).
 
 list_all() ->
-  global:send(?MODULE, {list_all, self()}),
-  receive
-    {all_nodes, A} ->
-      A
+  gen_server:call({global, ?MODULE}, {list_all}).
+
+%
+%% gen_server callbacks
+%
+
+init([Details]) -> 
+  {ok, #state{details=Details}}.
+
+%%--------------------------------------------------------------------
+%% Function: %% handle_call(Request, From, State) -> {reply, Reply, State} |
+%%                                      {reply, Reply, State, Timeout} |
+%%                                      {noreply, State} |
+%%                                      {noreply, State, Timeout} |
+%%                                      {stop, Reason, Reply, State} |
+%%                                      {stop, Reason, State}
+%% Description: Handling call messages
+%%--------------------------------------------------------------------
+handle_call({list}, _Source, State) ->
+  {reply, State#state.active_nodes, State} ;
+handle_call({list_all}, _Source, State) -> 
+  {reply, State#state.nodes, State} ;
+handle_call({pending_size}, _Source, State) -> 
+  {reply, length(State#state.pending_requests), State} ;
+handle_call({flush_pending}, _Source, State) -> 
+  {reply, length(State#state.pending_requests), State#state{pending_requests=queue:new()}} ;
+handle_call({details}, _Source, State) -> 
+  {reply, State#state.details, State} ;
+handle_call({refund, Resource}, _Source, State) -> 
+  % Only work if this node is actually a member of the pool
+  IsMember = lists:member(Resource, State#state.nodes),
+  if IsMember -> 
+    QueueIsEmpty = queue:is_empty(State#state.pending_requests),
+    if QueueIsEmpty ->
+         {reply, ok, State#state{active_nodes=[Resource|State#state.active_nodes]}} ;
+       true -> 
+         {{value, Waiting}, NewQueue} = queue:out(State#state.pending_requests),
+         Waiting ! {resource, Resource},
+         {reply, ok, State#state{pending_requests=NewQueue}}
+    end ;
+    true -> 
+    {reply, not_a_member, State}
   end.
 
-remove_server(Server) ->
-  global:send(?MODULE, {remove_server, Server}),
-  ok.
 
-remove_all() ->
-  global:send(?MODULE, {remove_all}),
-  ok.
 
-remove_server_filter(Server, {Server, _X}) -> false;
-remove_server_filter(_Server, {_NotServer, _X}) -> true.
 
-loop([],A) ->
-  receive
-    {add, {Node, Proc}} when is_pid(Proc) ->
-      erlang:link(Proc),
-      loop([{Node,Proc}],[{Node,Proc}|A]);
-    {list, Pid} ->
-      Pid ! {nodes, []},
-      loop([],A);
-    {list_all, Pid} ->
-      Pid ! {all_nodes, A},
-      loop([],A);
-    {refund,Node} ->
-      Membership = lists:member(Node,A),
-      if 
-        Membership ->
-          loop([Node],A);
-        true ->
-          loop([],A)
-      end;
-    {'EXIT', Pid, _Reason} -> 
-      FilterFun = fun({_Node,MPid}) -> MPid /= Pid end,
-      loop([],lists:filter(FilterFun, A))
-  end;
-loop(X,A) -> 
-  receive 
-    {add, {Node, Proc}} when is_pid(Proc)->
-      erlang:link(Proc),
-      I = {Node, Proc},
-      loop([I|X], [I|A]);
-    {remove, I} -> 
-      loop(lists:delete(I,X), lists:delete(I,A));
-    {remove_server, Server} ->
-      PurgedX = lists:filter(fun(Z) -> remove_server_filter(Server, Z) end, X),
-      PurgedA = lists:filter(fun(Z) -> remove_server_filter(Server, Z) end, A),
-      loop(PurgedX, PurgedA);
-    {remove_all} ->
-      loop([],[]);
-    {list, Pid} ->
-      Pid ! {nodes, X},
-      loop(X,A);
-    {list_all, Pid} ->
-      Pid ! {all_nodes, A},
-      loop(X,A);
-    {get, Pid} ->
-      [Node|Rest] = X,
-      Pid ! {node, Node},
-      loop(Rest,A);
-    {refund,Node} ->
-      Membership = lists:member(Node,A),
-      if 
-        Membership ->
-          loop(X ++ [Node],A);
-        true ->
-          loop(X,A)
-      end;
-    {'EXIT', Pid, _Reason} -> 
-      FilterFun = fun({_Node,MPid}) -> MPid /= Pid end,
-      loop(lists:filter(FilterFun,X),lists:filter(FilterFun, A));
-    Other ->
-      io:format("~p loop(X,A) Received unknown message: ~p~n", [?MODULE, Other]),
-      loop(X,A)
+%%--------------------------------------------------------------------
+%% Function: handle_cast(Msg, State) -> {noreply, State} |
+%%                                      {noreply, State, Timeout} |
+%%                                      {stop, Reason, State}
+%% Description: Handling cast messages
+%%--------------------------------------------------------------------
+handle_cast({remove, Rsrc}, State) -> 
+  {noreply,  State#state{ nodes=lists:remove(Rsrc, State#state.nodes),
+                          active_nodes=lists:remove(Rsrc, State#state.active_nodes)}};
+handle_cast({add, Rsrc}, State) -> 
+  {Nodes, ActiveNodes} = {State#state.nodes, State#state.active_nodes},
+  ToAdd = not lists:member(Rsrc, Nodes),
+  if 
+    ToAdd ->
+      {noreply, State#state{nodes=[Rsrc|Nodes], active_nodes=[Rsrc|ActiveNodes]}};
+    true ->
+      {noreply, State}
+  end ;
+handle_cast({get, For}, State) -> 
+  if 
+    length(State#state.active_nodes) > 0 -> 
+      [Head|Rest] = State#state.active_nodes,
+      For ! {resource, Head},
+      {noreply, State#state{active_nodes=Rest}} ;
+    true ->
+      Q = queue:in(For, State#state.pending_requests),
+      {noreply, State#state{pending_requests=Q}}
   end.
+
+
+handle_info(Any,S) -> 
+  io:format("Got INFO ~p~n", [Any]),
+  {noreply, S}.
+
+%%--------------------------------------------------------------------
+%% Func: length(OldVsn, State, Extra) -> {ok, NewState}
+%% Description: Convert process state when code is changed
+%%--------------------------------------------------------------------
+code_change(_OldVsn, State, _Extra) ->
+    {ok, State}.
+
+
+%%--------------------------------------------------------------------
+%% Function: terminate(Reason, State) -> void()
+%% Description: This function is called by a gen_server when it is about to
+%% terminate. It should be the opposite of Module:init/1 and do any necessary
+%% cleaning up. When it returns, the gen_server terminates with Reason.
+%% The return value is ignored.
+%%--------------------------------------------------------------------
+terminate(_Reason, _State) ->
+    ok.
+
+%%--------------------------------------------------------------------
+%% Internal API calls
+%%--------------------------------------------------------------------
