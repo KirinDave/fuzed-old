@@ -30,8 +30,8 @@ handle_request_helper(Arg,ServerInfo,Retries) ->
   receive
     {rails_response, Response} ->
       Response
-  after 5000 ->
-    handle_request_helper(Arg,ServerInfo, Retries+1)
+%  after 5000 ->
+%    handle_request_helper(Arg,ServerInfo, Retries+1)
   end.
   
 
