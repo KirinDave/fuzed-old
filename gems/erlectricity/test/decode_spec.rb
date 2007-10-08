@@ -20,26 +20,25 @@ context "When unpacking from a binary stream" do
   
   specify "an erlang number encoded as a small bignum (1 byte length) should decode to fixnum if it can" do
     get("#{1 << 27 - 1}").should == 1 << 27 - 1
-    get("#{-(1 << 27) + 1}").should == -(1 << 27) + 1
+    get("#{-(1 << 27) - 1}").should == -(1 << 27) - 1
     get("#{(1 << word_length) - 1}").should == (1 << word_length) - 1
-    get("#{-(1 << word_length) + 1}").should == -(1 << word_length) + 1
-    get("121245").should == 121245
+    get("#{-(1 << word_length)}").should == -(1 << word_length)
   end
   
-  # specify "an erlang number encoded as a small bignum (1 byte length) should decode to bignum if it can't be a fixnum" do
-  #   get("#{(1 << word_length)}").should == (1 << word_length)
-  #   get("#{-(1 << word_length) - 1}").should == -(1 << word_length) - 1
-  #   get("#{(1 << (255 * 8)) - 1}").should == (1 << (255 * 8)) - 1
-  #   get("#{-((1 << (255 * 8)) - 1)}").should == -((1 << (255 * 8)) - 1)
-  # end
+  specify "an erlang number encoded as a small bignum (1 byte length) should decode to bignum if it can't be a fixnum" do
+    get("#{(1 << word_length)}").should == (1 << word_length)
+    get("#{-(1 << word_length) - 1}").should == -(1 << word_length) - 1
+    get("#{(1 << (255 * 8)) - 1}").should == (1 << (255 * 8)) - 1
+    get("#{-((1 << (255 * 8)) - 1)}").should == -((1 << (255 * 8)) - 1)
+  end
   
   
-  # specify "an erlang number encoded as a big bignum (4 byte length) should decode to bignum" do
-  #   get("#{(1 << (255 * 8)) }").should == (1 << (255 * 8))
-  #   get("#{-(1 << (255 * 8))}").should == -(1 << (255 * 8))
-  #   get("#{(1 << (512 * 8)) }").should == (1 << (512 * 8))
-  #   get("#{-(1 << (512 * 8))}").should == -(1 << (512 * 8))
-  # end
+  specify "an erlang number encoded as a big bignum (4 byte length) should decode to bignum" do
+    get("#{(1 << (255 * 8)) }").should == (1 << (255 * 8))
+    get("#{-(1 << (255 * 8))}").should == -(1 << (255 * 8))
+    get("#{(1 << (512 * 8)) }").should == (1 << (512 * 8))
+    get("#{-(1 << (512 * 8))}").should == -(1 << (512 * 8))
+  end
   
   specify "an erlang float should decode to a Float" do
     get("#{1.0}").should == 1.0

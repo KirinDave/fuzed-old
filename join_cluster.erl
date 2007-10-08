@@ -5,7 +5,7 @@ start(Server, Command) ->
   code:add_patha("./elibs"),
   erlang:set_cookie(node(), 'AWZVAQXUPGVPKZQLYEUP'),
   net_adm:ping(Server), sleep_in_HEAVENLY_PEACE(2),
-  start_resource_manager(Command, 4).
+  start_resource_manager(Command, 1).
 
 start_resource_manager(Command, N) -> 
   Spawner = fun() -> 

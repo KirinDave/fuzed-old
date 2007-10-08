@@ -15,7 +15,7 @@
 %% Erlang records are ugly.
 -record(state, {generator = fun() -> undefined end,
                 terminator = fun(_) -> undefined end,
-                nodecount = 4,
+                nodecount = 1,
                 nodes = [],
                 term_hook = fun(_) -> undefined end
                }).

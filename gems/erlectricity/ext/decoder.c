@@ -129,13 +129,12 @@ VALUE read_list(unsigned char **pData) {
 // primitives
 
 void read_string_raw(unsigned char *dest, unsigned char **pData, int length) {
-  strncpy((char *) dest, (char *) *pData, length);
+  memcpy((char *) dest, (char *) *pData, length);
   *(dest + length) = (unsigned char) 0;
   *pData += length;
 }
 
 VALUE read_bin(unsigned char **pData) {
-  // fail("Invalid Type, not an erlang binary") unless read_1 == BIN
   if(read_1(pData) != ERL_BIN) {
     rb_raise(rb_eStandardError, "Invalid Type, not an erlang binary");
   }
@@ -225,7 +224,6 @@ VALUE read_small_bignum(unsigned char **pData) {
   for(i = 0; i < size; ++i) {
     tmp = INT2FIX(*(buf + i));
     tmp = rb_funcall(tmp, rb_intern("<<"), 1, INT2NUM(i * 8));
-    
     num = rb_funcall(num, rb_intern("+"), 1, tmp);
   }
   
