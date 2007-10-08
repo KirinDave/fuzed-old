@@ -305,16 +305,15 @@ VALUE read_new_reference(unsigned char **pData) {
     rb_raise(rb_eStandardError, "Invalid Type, not a new-style reference");
   }
   
-  VALUE size = INT2NUM(read_2(pData));
+  int size = read_2(pData);
   VALUE node = read_atom(pData);
   VALUE creation = INT2FIX(read_1(pData));
   
-  VALUE parts[size];
+  VALUE id = rb_ary_new2(size);
   int i;
   for(i = 0; i < size; ++i) {
-    parts[i] = INT2NUM(read_4(pData));
+    rb_ary_store(id, i, INT2NUM(read_4(pData)));
   }
-  VALUE id = rb_ary_new4(size, parts);
   
   VALUE newref_class = rb_const_get(mErlectricity, rb_intern("NewReference"));
   return rb_funcall(newref_class, rb_intern("new"), 3, node, creation, id);

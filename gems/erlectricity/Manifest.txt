@@ -16,7 +16,6 @@ lib/erlectricity/conditions/hash.rb
 lib/erlectricity/conditions/static.rb
 lib/erlectricity/conditions/type.rb
 lib/erlectricity/constants.rb
-lib/erlectricity/decoder.rb
 lib/erlectricity/encoder.rb
 lib/erlectricity/errors/decode_error.rb
 lib/erlectricity/errors/encode_error.rb
