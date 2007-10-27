@@ -11,18 +11,14 @@ Hoe.new('fuzed', Fuzed::VERSION) do |p|
   # p.description = p.paragraphs_of('README.txt', 2..5).join("\n\n")
   # p.url = p.paragraphs_of('README.txt', 0).first.split(/\n/)[1..-1]
   p.changes = p.paragraphs_of('History.txt', 0..1).join("\n\n")
-  p.extra_deps << ['erlectricity', '>= 0.1.0']
+  p.extra_deps << ['erlectricity', '>= 0.2.0']
 end
 
-task :build do
-  Dir['./**/*.erl'].each do |source|
-    unless File.open(source).read =~ /#!/
-      puts "compiling #{source}"
-      Dir.chdir(File.dirname(source)) do |dir|
-        puts `erlc #{File.basename(source)}`
-      end
-    end
-  end
+ERLC_TEST_FLAGS = "-pa ebin/eunit -I include/eunit -DTEST"
+ERLC_FLAGS = "+debug_info -W2 -I include -I include/yaws -o ebin"
+
+task :default do
+  sh "erlc  #{ERLC_FLAGS} #{ERLC_TEST_FLAGS} elibs/*.erl"
 end
 
 desc 'Generate manifest from git files'
