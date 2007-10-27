@@ -52,3 +52,8 @@ desc "Upload site to Rubyforge"
 task :site do
   sh "scp -r site/* mojombo@god.rubyforge.org:/var/www/gforge-projects/fuzed"
 end
+
+task :fuzed do
+  # sh "erl -boot start_sasl +Bc +K true -smp enable -pz ./etest -pz ./ebin -pz ./ebin/eunit -name 'master@volcano.local' -run fuzed start"
+  sh %Q{yaws --conf fuzed.conf --pa './ebin' --name "master@volano.local" --runmod fuzed --erlarg '+Bc +K true -smp enabled'}
+end

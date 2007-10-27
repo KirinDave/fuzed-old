@@ -35,7 +35,9 @@ when 'start'
   nodename = options[:name]
   
   puts "Starting yaws server with name: #{nodename}"
-  system %Q{yaws --conf #{config} --pa #{Fuzed.relative 'elibs'} -name "#{nodename}" --runmod rails_connection_pool}
+  system %Q{yaws --conf #{config} --pa #{Fuzed.relative 'ebin'} \
+            -name "#{nodename}" --runmod fuzed \
+            --erlarg '+Bc +K true -smp enabled'}
 when 'join'
   nodename = options[:name]
   master = options[:master_name]
@@ -43,7 +45,15 @@ when 'join'
   
   puts "Starting a client named #{nodename} offering service to #{master}"
   puts "Each node will run: 'fuzed-adapter #{rails}'"
-  system %Q{cd #{Fuzed.root}; erl -noshell -name #{nodename} -eval "join_cluster:start('#{master}','fuzed-adapter #{rails}')."}
+  cmd = %Q{cd #{Fuzed.root}; erl -boot start_sasl \
+            +Bc +K true -smp enabled \
+            -name "#{nodename}" \
+            -pa #{Fuzed.relative 'ebin'} \
+            -fuzed_node master "'#{master}'" \
+            -fuzed_node command '"#{Fuzed.root}/bin/fuzed-adapter #{rails}"' \
+            -run fuzed_node start}.squeeze(' ')
+  puts cmd
+  system(cmd)
 else
   puts 'Invalid command'
 end

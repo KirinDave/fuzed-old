@@ -82,7 +82,8 @@ list_all() ->
 %% gen_server callbacks
 %
 
-init([Details]) -> 
+init([Details]) ->
+  io:format("~p starting~n", [?MODULE]),
   {ok, #state{details=Details}}.
 
 %%--------------------------------------------------------------------
@@ -130,13 +131,16 @@ handle_call({refund, Resource}, _Source, State) ->
 %% Description: Handling cast messages
 %%--------------------------------------------------------------------
 handle_cast({remove, Rsrc}, State) -> 
-  {noreply,  State#state{ nodes=lists:remove(Rsrc, State#state.nodes),
-                          active_nodes=lists:remove(Rsrc, State#state.active_nodes)}};
+  {noreply,  State#state{ nodes=lists:delete(Rsrc, State#state.nodes),
+                          active_nodes=lists:delete(Rsrc, State#state.active_nodes)}};
 handle_cast({add, Rsrc}, State) -> 
   {Nodes, ActiveNodes} = {State#state.nodes, State#state.active_nodes},
   ToAdd = not lists:member(Rsrc, Nodes),
   if 
     ToAdd ->
+      error_logger:info_msg("Adding resource: ~p~n", [Rsrc]),
+      {_RNode, RPid} = Rsrc,
+      pool_sweeper:watch(RPid),
       {noreply, State#state{nodes=[Rsrc|Nodes], active_nodes=[Rsrc|ActiveNodes]}};
     true ->
       {noreply, State}
