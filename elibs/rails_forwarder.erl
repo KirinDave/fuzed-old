@@ -1,7 +1,7 @@
 -module(rails_forwarder).
 -compile(export_all).
--include("../yaws_includes/yaws_api.hrl").
--include("../yaws_includes/yaws.hrl").
+-include("yaws_api.hrl").
+-include("yaws.hrl").
 
 %-export([rails_create_responder/1, rails_create_responders/2, rails_handle_request/3, 
 %         rails_handle_request_for/3, get_rails_response/2, prepare_request/1, decode_result/1]).
