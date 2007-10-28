@@ -1,17 +1,19 @@
 require 'rubygems'
 require 'hoe'
 
-#Hoe.new('fuzed', "0.5.0") do |p|
-#  p.rubyforge_name = 'fuzed'
-#  p.author = ['Dave Fayram', 'Tom Preston-Werner']
-#  p.email = ['tom@rubyisawesome.com']
-#  p.summary = 'Leverage the YAWS webserver (and additional erlang-based infrastructure) to run Rails.'
-#  p.url = 'fuzed.rubyforge.org'
-#  # p.description = p.paragraphs_of('README.txt', 2..5).join("\n\n")
-#  # p.url = p.paragraphs_of('README.txt', 0).first.split(/\n/)[1..-1]
-#  p.changes = p.paragraphs_of('History.txt', 0..1).join("\n\n")
-#  p.extra_deps << ['erlectricity', '>= 0.2.0']
-#end
+if %w{clean package}.include?(ARGV[0])
+  Hoe.new('fuzed', "0.2.0") do |p|
+   p.rubyforge_name = 'fuzed'
+   p.author = ['Dave Fayram', 'Tom Preston-Werner']
+   p.email = ['tom@rubyisawesome.com']
+   p.summary = 'Leverage the YAWS webserver (and additional erlang-based infrastructure) to run Rails.'
+   p.url = 'fuzed.rubyforge.org'
+   # p.description = p.paragraphs_of('README.txt', 2..5).join("\n\n")
+   # p.url = p.paragraphs_of('README.txt', 0).first.split(/\n/)[1..-1]
+   p.changes = p.paragraphs_of('History.txt', 0..1).join("\n\n")
+   p.extra_deps << ['erlectricity', '>= 0.2.0']
+  end
+end
 
 ERLC_TEST_FLAGS = "-pa ebin/eunit -I include/eunit -DTEST"
 ERLC_FLAGS = "+debug_info -W2 -I include -I include/yaws -o ebin"

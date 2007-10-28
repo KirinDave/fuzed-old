@@ -77,6 +77,9 @@ list() ->
 
 list_all() ->
   gen_server:call({global, ?MODULE}, {list_all}).
+  
+pending_size() ->
+  gen_server:call({global, ?MODULE}, {pending_size}).
 
 %
 %% gen_server callbacks
@@ -100,7 +103,7 @@ handle_call({list}, _Source, State) ->
 handle_call({list_all}, _Source, State) -> 
   {reply, State#state.nodes, State} ;
 handle_call({pending_size}, _Source, State) -> 
-  {reply, length(State#state.pending_requests), State} ;
+  {reply, queue:len(State#state.pending_requests), State} ;
 handle_call({flush_pending}, _Source, State) -> 
   {reply, length(State#state.pending_requests), State#state{pending_requests=queue:new()}} ;
 handle_call({details}, _Source, State) -> 

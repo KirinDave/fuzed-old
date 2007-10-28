@@ -1,8 +1,8 @@
 fuzed
     by Dave Fayram, Tom Preston-Werner
     fuzed.rubyforge.org
-    
-    
+
+
 == Summary
 Leverage the YAWS webserver (and additional erlang-based infrastructure) to
 run Rails.
@@ -20,19 +20,19 @@ run Rails.
 
 == Installation (from gem)
 
-  gem install fuzed
-  
+  sudo gem install fuzed
+
 
 == Installation (from git)
 
 Get it from the git repo:
 
   git clone git://repo.or.cz/fuzed.git
-  
+
 Change to the fuzed working copy:
 
   cd fuzed
-    
+
 Build Fuzed:
 
   rake build
@@ -48,8 +48,8 @@ characters on a single line (no newline).
 
 Generate a starter Yaws config file with:
 
-  fuzed-conf RAILS_ROOT 8080
-  
+  fuzed-conf RAILS_ROOT 8080 > fuzed.conf
+
 where RAILS_ROOT is the absolute path to the root directory of your Rails
 project. You may optionally specify a port as the second argument. This will
 generate a file called 'fuzed.conf' which contains a sample Yaws config file
@@ -61,17 +61,17 @@ that should be suitable for initial testing.
 Start the fuzed master server (yaws) locally:
 
   fuzed start -n server@127.0.0.1 -c fuzed.conf
-  
+
 In another terminal, start a fuzed client locally:
 
   fuzed join -n client@127.0.0.1 -m server@127.0.0.1 -r RAILS_ROOT
-  
+
 where RAILS_ROOT is the same as before.
     
 Point your browser at:
 
-  http://localhost
-  
+  http://localhost:8080
+
 If everything worked out, you'll see your Rails app!
 
 

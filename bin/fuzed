@@ -22,6 +22,10 @@ OptionParser.new do |opts|
     options[:master_name] = n
   end
   
+  opts.on("-o NUMNODES", "--num_nodes NUMNODES", "Number of nodes to run") do |n|
+    options[:num_nodes] = n
+  end
+  
   opts.on("-r RAILS_ROOT", "--rails RAILS_ROOT", "Path to Rails root") do |a|
     options[:rails] = a
   end
@@ -35,25 +39,48 @@ when 'start'
   nodename = options[:name]
   
   puts "Starting yaws server with name: #{nodename}"
-  system %Q{yaws --conf #{config} --pa #{Fuzed.relative 'ebin'} \
-            -name "#{nodename}" --runmod fuzed \
-            --erlarg '+Bc +K true -smp enabled'}
+  cmd = %Q{yaws --conf #{config} --pa #{Fuzed.relative 'ebin'} \
+           -name "#{nodename}" --runmod fuzed \
+           --erlarg '+Bc +K true -smp enabled'}.squeeze(' ')
+  puts cmd
+  exec(cmd)
 when 'join'
   nodename = options[:name]
   master = options[:master_name]
+  num_nodes = options[:num_nodes]
   rails = options[:rails]
   
   puts "Starting a client named #{nodename} offering service to #{master}"
   puts "Each node will run: 'fuzed-adapter #{rails}'"
-  cmd = %Q{cd #{Fuzed.root}; erl -boot start_sasl \
-            +Bc +K true -smp enabled \
-            -name "#{nodename}" \
-            -pa #{Fuzed.relative 'ebin'} \
-            -fuzed_node master "'#{master}'" \
-            -fuzed_node command '"#{Fuzed.root}/bin/fuzed-adapter #{rails}"' \
-            -run fuzed_node start}.squeeze(' ')
+  Dir.chdir(Fuzed.root)
+  cmd = %Q{erl -boot start_sasl \
+           +Bc +K true -smp enabled \
+           -name "#{nodename}" \
+           -pa #{Fuzed.relative 'ebin'} \
+           -fuzed_node master "'#{master}'" \
+           -fuzed_node command '"#{Fuzed.root}/bin/fuzed-adapter #{rails}"' \
+           -fuzed_node num_nodes #{num_nodes || 2} \
+           -run fuzed_node start}.squeeze(' ')
   puts cmd
-  system(cmd)
+  exec(cmd)
+when 'local'
+  rails = File.expand_path('.')
+  config = "/tmp/fuzed-local.conf"
+  
+  puts "Starting yaws server with name: #{nodename}"
+  
+  File.open(config, 'w') do |f|
+    f.write `#{File.join(File.dirname(__FILE__), *%w[fuzed-conf])} #{rails} 3000`
+  end
+  
+  cmd = %Q{yaws --conf #{config} \
+           --pa #{Fuzed.relative 'ebin'} \
+           --runmod fuzed \
+           --runmod fuzed_node \
+           --erlarg '+Bc +K true -smp enabled -fuzed_node command \
+           '"#{Fuzed.root}/bin/fuzed-adapter #{rails}"''}.squeeze(' ')
+  puts(cmd)
+  exec(cmd)
 else
   puts 'Invalid command'
 end

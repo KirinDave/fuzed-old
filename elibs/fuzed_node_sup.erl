@@ -43,8 +43,8 @@ init_helper({ok, Command}, {ok, NumNodes}) when integer(NumNodes) ->
   start_rm(Command, NumNodes);
 init_helper({ok, Command}, undefined) ->
   error_logger:info_msg("Starting with command: ~p~n", [Command]),
-  error_logger:info_msg("Starting with default (2) nodes~n"),
-  start_rm(Command, 2).
+  error_logger:info_msg("Starting with default (1) nodes~n"),
+  start_rm(Command, 1).
 
 start_rm(Command, NumNodes) -> 
   Maker = fun() -> 

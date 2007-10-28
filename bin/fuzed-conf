@@ -16,8 +16,4 @@ SUBSTITUTIONS.each_pair do |key, data|
   conf.gsub!(repl_key, data)
 end
 
-File.open('fuzed.conf', 'w') do |f|
-  f.write conf
-end
-
-puts 'successfully wrote fuzed.conf in current directory'
+puts conf

@@ -24,7 +24,7 @@ handle_request(Resource, Request, ServerOptions, Timeout) ->
     Any -> Any
   catch
     throw:timed_out -> 
-      io:format("--- Timed out, removing resource and retrying!"),
+      io:format("--- Timed out (~p), removing resource and retrying!~n", [Resource]),
       rails_connection_pool:remove(Resource),
       rails_forwarder:handle_request(rails_connection_pool:get(), Request, ServerOptions, Timeout)
   end.
