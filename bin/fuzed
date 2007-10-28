@@ -64,6 +64,7 @@ when 'join'
   puts cmd
   exec(cmd)
 when 'local'
+  num_nodes = options[:num_nodes]
   rails = File.expand_path('.')
   config = "/tmp/fuzed-local.conf"
   
@@ -76,8 +77,9 @@ when 'local'
   cmd = %Q{yaws --conf #{config} \
            --pa #{Fuzed.relative 'ebin'} \
            --runmod stack \
-           --erlarg '+Bc +K true -smp enabled -fuzed_node command \
-           "\\\"fuzed-adapter #{rails}\\\""'}.squeeze(' ')
+           --erlarg '+Bc +K true -smp enabled \
+           -fuzed_node command "\\\"fuzed-adapter #{rails}\\\"" \
+           -fuzed_node num_nodes #{num_nodes || 1}'}.squeeze(' ')
   puts(cmd)
   exec(cmd)
 else

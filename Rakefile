@@ -27,6 +27,12 @@ task :build do
   sh "erlc  #{ERLC_FLAGS} elibs/*.erl"
 end
 
+task :install do
+  sh "rake clean"
+  sh "rake package"
+  sh "sudo gem install pkg/fuzed*.gem"
+end
+
 task :econsole do
   sh "erl #{ERLR_FLAGS} -sname fuzed_console_#{$$}"
 end
