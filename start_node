@@ -1,6 +1,0 @@
-#!/bin/sh
-
-echo "Starting a client named $1 offering service to $2"
-echo "Each node will run: '$3'"
-erl -noshell -name $1 -eval "join_cluster:start('$2',\"$3\")."
-#echo "join_cluster:start($2,\"$3\")"

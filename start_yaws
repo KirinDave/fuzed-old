@@ -1,5 +1,0 @@
-#!/bin/sh
-
-# Invoke with an argument which is the nodename
-echo "Starting yaws server with name: $@"
-yaws --conf testing.conf --pa elibs -name "$@" --runmod rails_connection_pool
