@@ -1,7 +1,7 @@
 require 'rubygems'
 require 'hoe'
 
-if %w{clean package}.include?(ARGV[0])
+if %w{check_manifest clean package}.include?(ARGV[0])
   Hoe.new('fuzed', "0.2.0") do |p|
    p.rubyforge_name = 'fuzed'
    p.author = ['Dave Fayram', 'Tom Preston-Werner']

@@ -58,7 +58,7 @@ when 'join'
            -name "#{nodename}" \
            -pa #{Fuzed.relative 'ebin'} \
            -fuzed_node master "'#{master}'" \
-           -fuzed_node command '"#{Fuzed.root}/bin/fuzed-adapter #{rails}"' \
+           -fuzed_node command '"fuzed-adapter #{rails}"' \
            -fuzed_node num_nodes #{num_nodes || 2} \
            -run fuzed_node start}.squeeze(' ')
   puts cmd
@@ -75,10 +75,9 @@ when 'local'
   
   cmd = %Q{yaws --conf #{config} \
            --pa #{Fuzed.relative 'ebin'} \
-           --runmod fuzed \
-           --runmod fuzed_node \
+           --runmod stack \
            --erlarg '+Bc +K true -smp enabled -fuzed_node command \
-           '"#{Fuzed.root}/bin/fuzed-adapter #{rails}"''}.squeeze(' ')
+           "\\\"fuzed-adapter #{rails}\\\""'}.squeeze(' ')
   puts(cmd)
   exec(cmd)
 else
