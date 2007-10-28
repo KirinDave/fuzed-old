@@ -70,7 +70,7 @@ when 'local'
   puts "Starting yaws server with name: #{nodename}"
   
   File.open(config, 'w') do |f|
-    f.write `#{File.join(File.dirname(__FILE__), *%w[fuzed-conf])} #{rails} 3000`
+    f.write `fuzed-conf #{rails} 3000`
   end
   
   cmd = %Q{yaws --conf #{config} \

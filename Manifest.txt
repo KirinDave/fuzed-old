@@ -37,6 +37,7 @@ ebin/rails_connection_pool.beam
 ebin/rails_forwarder.beam
 ebin/rails_handler.beam
 ebin/resource_manager.beam
+ebin/stack.beam
 elibs/fuzed.erl
 elibs/fuzed_app.erl
 elibs/fuzed_node.erl
@@ -49,6 +50,7 @@ elibs/rails_connection_pool.erl
 elibs/rails_forwarder.erl
 elibs/rails_handler.erl
 elibs/resource_manager.erl
+elibs/stack.erl
 fuzed.conf
 include/eunit/eunit.hrl
 include/eunit/eunit_off.hrl
