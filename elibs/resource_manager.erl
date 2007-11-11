@@ -6,7 +6,7 @@
 -behaviour(gen_server).
 
 %% API exports
--export([start_link/3, start/3,nodes/0,nodecount/0,change_nodecount/1,cycle/0]).
+-export([start_link/3, start/3,nodes/0,nodecount/0,change_nodecount/1,cycle/0,cycle/1]).
 
 %% gen_server callback exports
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -33,6 +33,7 @@ nodes() -> gen_server:call(?MODULE, nodes).
 nodecount() -> gen_server:call(?MODULE, nodecount).
 change_nodecount(NewNodecount) -> gen_server:cast(?MODULE, {change_nodecount, NewNodecount}).
 cycle() -> gen_server:cast(?MODULE, cycle).
+cycle(Node) -> gen_server:cast({?MODULE, Node}, cycle).
 
 %% GEN_SERVER callbacks.
 init([Generator, Terminator, NumNodes]) ->

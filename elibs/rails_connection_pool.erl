@@ -67,6 +67,10 @@ get() ->
   receive 
     {resource, Rsrc} -> Rsrc
   end.
+  
+cycle_all(Delay) ->
+  gen_server:cast({global, ?MODULE}, {cycle_all, Delay}).
+
 
 
 refund(Node) ->
@@ -157,7 +161,22 @@ handle_cast({get, For}, State) ->
     true ->
       Q = queue:in(For, State#state.pending_requests),
       {noreply, State#state{pending_requests=Q}}
-  end.
+  end;
+handle_cast({cycle_all, Delay}, State) ->
+  Tuples = State#state.nodes,
+  Fun = fun({X, _Pid}, Acc) ->
+    Member = lists:member(X, Acc),
+    if
+      Member ->
+        Acc;
+      true ->
+        [X|Acc]
+    end
+  end,
+  Nodes = lists:foldl(Fun, [], Tuples),
+  error_logger:info_msg("Cycling all nodes: ~p~n", [Nodes]),
+  lists:foreach(fun(Node) -> resource_manager:cycle(Node), timer:sleep(Delay * 1000) end, Nodes),
+  {noreply, State}.
 
 
 handle_info(Any,S) -> 

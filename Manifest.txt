@@ -6,8 +6,8 @@ Rakefile
 bin/fuzed
 bin/fuzed-adapter
 bin/fuzed-conf
-bin/fuzed-fast
 ebin/.gitignore
+ebin/cycler.beam
 ebin/eunit/autoload.beam
 ebin/eunit/code_monitor.beam
 ebin/eunit/eunit.beam
@@ -38,6 +38,7 @@ ebin/rails_forwarder.beam
 ebin/rails_handler.beam
 ebin/resource_manager.beam
 ebin/stack.beam
+elibs/cycler.erl
 elibs/fuzed.erl
 elibs/fuzed_app.erl
 elibs/fuzed_node.erl
