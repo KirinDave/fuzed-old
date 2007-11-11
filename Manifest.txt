@@ -7,7 +7,6 @@ bin/fuzed
 bin/fuzed-adapter
 bin/fuzed-conf
 ebin/.gitignore
-ebin/cycler.beam
 ebin/eunit/autoload.beam
 ebin/eunit/code_monitor.beam
 ebin/eunit/eunit.beam
@@ -30,6 +29,7 @@ ebin/fuzed_node.beam
 ebin/fuzed_node_app.beam
 ebin/fuzed_node_sup.beam
 ebin/fuzed_sup.beam
+ebin/fuzed_util.beam
 ebin/join_cluster.beam
 ebin/pool_sweeper.beam
 ebin/port_wrapper.beam
@@ -38,13 +38,13 @@ ebin/rails_forwarder.beam
 ebin/rails_handler.beam
 ebin/resource_manager.beam
 ebin/stack.beam
-elibs/cycler.erl
 elibs/fuzed.erl
 elibs/fuzed_app.erl
 elibs/fuzed_node.erl
 elibs/fuzed_node_app.erl
 elibs/fuzed_node_sup.erl
 elibs/fuzed_sup.erl
+elibs/fuzed_util.erl
 elibs/pool_sweeper.erl
 elibs/port_wrapper.erl
 elibs/rails_connection_pool.erl

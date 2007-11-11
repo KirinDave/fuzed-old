@@ -10,9 +10,9 @@ options = {}
 OptionParser.new do |opts|
   opts.banner = <<-EOF
   Usage:
-    fuzed local [-r RAILS_ROOT] [-d]
-    fuzed start -c CONFIG -n NAME [-d]
-    fuzed join -n NAME -m MASTER -r RAILS_ROOT [-o NUMNODES] [-d]
+    fuzed local [-r RAILS_ROOT] [-P PID_FILE] [-d]
+    fuzed start -c CONFIG -n NAME [-P PID_FILE] [-d]
+    fuzed join -n NAME -m MASTER -r RAILS_ROOT [-P PID_FILE] [-o NUMNODES] [-d]
     fuzed cycle -n NAME -k NODE
     fuzed cycle_all -n NAME -s DELAY
   EOF
@@ -48,6 +48,10 @@ OptionParser.new do |opts|
   opts.on("-s DELAY", "--delay DELAY", "Number of seconds to delay between node cycling") do |a|
     options[:delay] = a
   end
+  
+  opts.on("-P PID_FILE", "--pid-file PID_FILE", "Where to write the pid file") do |a|
+    options[:pid] = a
+  end
 end.parse!
   
 command = ARGV[0]
@@ -57,6 +61,7 @@ when 'start'
   config = options[:config]
   nodename = options[:name]
   detached = options[:detached] ? '--daemon' : ''
+  pidfile = options[:pid] ? %Q{-run fuzed_util write_pid "#{options[:pid]}"} : ''
   
   puts "Starting yaws server with name: #{nodename}"
   cmd = %Q{yaws --conf #{config} \
@@ -64,7 +69,7 @@ when 'start'
                 --pa #{Fuzed.relative 'ebin'} \
                 --name "#{nodename}" \
                 --runmod fuzed \
-                --erlarg '+Bc +K true -smp auto'}.squeeze(' ')
+                --erlarg '#{pidfile} +Bc +K true -smp auto'}.squeeze(' ')
   puts cmd
   exec(cmd)
 when 'join'
@@ -73,6 +78,7 @@ when 'join'
   num_nodes = options[:num_nodes]
   rails = options[:rails]
   detached = options[:detached] ? '-detached' : ''
+  pidfile = options[:pid] ? %Q{-run fuzed_util write_pid "#{options[:pid]}"} : ''
   
   puts "Starting a client named #{nodename} offering service to #{master}"
   puts "Each node will run: 'fuzed-adapter #{rails}'"
@@ -85,6 +91,7 @@ when 'join'
            -fuzed_node master "'#{master}'" \
            -fuzed_node command '"fuzed-adapter #{rails}"' \
            -fuzed_node num_nodes #{num_nodes || 2} \
+           #{pidfile} \
            -run fuzed_node start}.squeeze(' ')
   puts cmd
   exec(cmd)
@@ -95,7 +102,8 @@ when 'cycle'
   cmd = %Q{erl -smp auto \
                -name "#{nodename}" \
                -pa #{Fuzed.relative 'ebin'} \
-               -run cycler cycle "#{killee}"}.squeeze(' ')
+               -run fuzed_util cycle "#{killee}" \
+               -run erlang halt}.squeeze(' ')
   puts(cmd)
   exec(cmd)
 when 'cycle_all'
@@ -106,7 +114,7 @@ when 'cycle_all'
   cmd = %Q{erl -smp auto \
                -name "#{nodename}" \
                -pa #{Fuzed.relative 'ebin'} \
-               -run cycler cycle_all "#{master}" #{delay} \
+               -run fuzed_util cycle_all "#{master}" #{delay} \
                -run erlang halt}.squeeze(' ')
   puts(cmd)
   exec(cmd)
@@ -115,6 +123,7 @@ when 'local'
   rails = options[:rails] || File.expand_path('.')
   config = "/tmp/fuzed-local.conf"
   detached = options[:detached] ? '--daemon' : ''
+  pidfile = options[:pid] ? %Q{-run fuzed_util write_pid "#{options[:pid]}"} : ''
   
   puts "Starting yaws server with name: #{nodename}"
   
@@ -126,7 +135,7 @@ when 'local'
            #{detached} \
            --pa #{Fuzed.relative 'ebin'} \
            --runmod stack \
-           --erlarg '+Bc +K true -smp auto \
+           --erlarg '#{pidfile} +Bc +K true -smp auto \
            -fuzed_node command "\\\"fuzed-adapter #{rails}\\\"" \
            -fuzed_node num_nodes #{num_nodes || 1}'}.squeeze(' ')
   puts(cmd)

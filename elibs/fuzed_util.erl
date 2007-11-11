@@ -1,7 +1,12 @@
--module(cycler).
+-module(fuzed_util).
 
--export([cycle/1, cycle_all/1, cycle_all/2]).
-
+-export([write_pid/1, cycle/1, cycle_all/1, cycle_all/2]).
+  
+write_pid([Location]) ->
+  Pid = os:getpid(),
+  ok = file:write_file(Location, list_to_binary(Pid)),
+  ok.
+  
 cycle([Node]) when is_list(Node) ->
   cycle(list_to_atom(Node));
 cycle(Node) ->
