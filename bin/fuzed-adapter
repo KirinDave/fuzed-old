@@ -9,7 +9,7 @@ require 'erlectricity'
 require 'stringio'
 require 'logger'
 
-LOG = false
+LOG = true
 
 $total_avg = [0, 0]
 $rails_avg = [0, 0]
@@ -76,7 +76,7 @@ module Rack
         method = request[:method]
         version = request[:http_version] # => e.g. [1, 1]
         path = request[:querypath]
-        query = request[:querydata]
+        query = request[:querydata] == :undefined ? '' : request[:querydata]
         server = request[:servername]
         headers = request[:headers]
         cookies = request[:cookies]

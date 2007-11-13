@@ -19,7 +19,6 @@
 -define(GC_FAIL_ON_BIND_ERR,                64).
 -define(GC_PICK_FIRST_VIRTHOST_ON_NOMATCH, 128).
 -define(GC_USE_FDSRV,                      256).
--define(GC_USE_LARGE_SSL_POOL,             512).
 
 -define(GC_DEF, (?GC_AUTH_LOG bor ?GC_FAIL_ON_BIND_ERR)).
 
@@ -41,8 +40,6 @@
 	((GC#gconf.flags band ?GC_PICK_FIRST_VIRTHOST_ON_NOMATCH) /= 0)).
 -define(gc_use_fdsrv(GC),
 	((GC#gconf.flags band ?GC_USE_FDSRV) /= 0)).
--define(gc_use_large_ssl_pool(GC),
-	((GC#gconf.flags band ?GC_USE_LARGE_SSL_POOL) /= 0)).
 
 -define(gc_set_tty_trace(GC, Bool), 
 	GC#gconf{flags = yaws:flag(GC#gconf.flags,?GC_TTY_TRACE, Bool)}).
@@ -66,8 +63,6 @@
 -define(gc_set_use_fdsrv(GC, Bool), 
 	GC#gconf{flags = yaws:flag(GC#gconf.flags,?GC_USE_FDSRV,Bool)}).
 
--define(gc_set_use_large_ssl_pool(GC, Bool), 
-	GC#gconf{flags = yaws:flag(GC#gconf.flags,?GC_USE_LARGE_SSL_POOL,Bool)}).
 
 %% global conf
 -record(gconf,{yaws_dir,           %% topdir of Yaws installation
@@ -84,7 +79,7 @@
 	       log_wrap_size = 10000000,  % wrap logs after 10M
 	       cache_refresh_secs = 30,  % seconds  (auto zero when debug)
 	       include_dir = [],    %% list of inc dirs for .yaws files 
-	       phpexe = "php-cgi",  %% cgi capable php executable
+	       phpexe = "/usr/bin/php-cgi",  %% cgi capable php executable
 	       yaws,                %% server string
 	       %username,           %% maybe run as a different user than root
 	       %uid,                %% unix uid of user that started yaws
@@ -196,14 +191,32 @@
 
 %% this internal record is used and returned by the URL path parser
 
+%<JMN_2007-02>
+%!todo - document this record and its usage more.
+% - is it really a win to store 'unflat' strings when they are generally quite short?
+% - we end up having to flatten at various points anyway, so I think in general they should just be stored flat.
+%
+% As an example of the problems - deliver_302 only handles flat paths, but I've seen it being passed #urltype.path
+% directly. Elsewhere I see urltype.path being written to in nested form.
+% WHEN is it being flattened? I don't know for sure that the unflat path could ever get to the deliver_302 but it sure
+% looks like a bug waiting to happen.
+%
+% I understand that for big strings, they can be passed over sockets etc unflattened and it gives a performance gain.
+% For URLs & filesystem paths however (which are generally reasonably short) 
+% - I think a canonical flat form is best for code maintainability and reliability  
+% - and perhaps also for performance - as it saves having to check for nestedness all over the place.
+%
+%
+%</JMN_2007-02>
+
 -record(urltype, {type,   %% error | yaws | regular | directory | 
-                          %% forbidden | appmod
+                          %% forbidden | appmod 
 		  finfo,
 		  path = [],
-		  fullpath = [], %% deep list
+		  fullpath = [], %% deep list (WHY?)
 		  dir = [],      %% relative dir where the path leads to
 		                 %% flat | unflat need flat for authentication
-		  data,  %% Binary | FileDescriptor | DirListing | undefined
+		  data,  	%% type-specific e.g: Binary | FileDescriptor | DirListing | undefined
 		  deflate,  %% undefined | Binary | dynamic
 		  mime = "text/html",    %% MIME type
 		  getpath,  %% as GET'ed by client
