@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="1.0">
+  <head>
+    <title>fuzed_goals</title>
+    <expansionState>0,3,8</expansionState>
+  </head>
+  <body>
+    <outline text="Main Goals">
+      <outline text="New stability and healing"/>
+      <outline text="Cluster separation (generating unique cookies)"/>
+      <outline text="URL separation of pools">
+        <outline text="Patterns in the url (via regexps or code)"/>
+        <outline text="resource_fountain"/>
+      </outline>
+      <outline text="Update rack adaptor"/>
+      <outline text="Update yaws to 1.75"/>
+    </outline>
+    <outline text="Stretch Goals">
+      <outline text="Split frontend from master"/>
+    </outline>
+  </body>
+</opml>
