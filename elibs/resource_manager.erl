@@ -41,9 +41,6 @@ start_link(Master, Nodes, Preproc, Postproc, Timeout) ->
 start(Master, Nodes, Preproc, Postproc, Timeout) ->
   gen_server:start({local, ?MODULE}, ?MODULE, [Master, Nodes,Preproc,Postproc,Timeout], []).
 
-% Returns the starting specification for this resource manager.
-% @spec specification() -> {string(), int()}
-
 % Returns a list of nodes maintained in this ResourceManager
 % @spec nodes() -> [pid()]
 nodes() -> gen_server:call(?MODULE, nodes).

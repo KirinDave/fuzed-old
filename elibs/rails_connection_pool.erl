@@ -20,7 +20,7 @@ handle_request(Arg,ServerInfo) ->
 
 handle_request_helper(_Arg,_ServerInfo,Retries) when Retries > 1 ->
   throw(timed_out);
-handle_request_helper(Arg,ServerInfo,Retries) ->
+handle_request_helper(Arg,ServerInfo,_Retries) ->
   Remote = fun(A,S,Target) ->
     {Source, Handler} = rails_connection_pool:get(),
     Response = rails_forwarder:rails_handle_request(Handler, A, S, 10000),
@@ -85,6 +85,9 @@ list_all() ->
 pending_size() ->
   gen_server:call({global, ?MODULE}, {pending_size}).
 
+identity() ->
+  gen_server:call({global, ?MODULE}, {identity}).
+
 %
 %% gen_server callbacks
 %
@@ -126,7 +129,9 @@ handle_call({refund, Resource}, _Source, State) ->
     end ;
     true -> 
     {reply, not_a_member, State}
-  end.
+  end;
+handle_call({identity}, _Source, State) ->
+  {reply, self(), State}.
 
 
 

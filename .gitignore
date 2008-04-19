@@ -2,3 +2,6 @@ fuzed.conf
 !templates/fuzed.conf
 *.dump
 pkg
+*~
+\#*\#
+.\#*

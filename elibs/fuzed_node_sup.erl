@@ -22,8 +22,9 @@ start_link(Args) ->
   
 
 init([]) ->
-  ping_master(application:get_env(master)),
-  init_helper(application:get_env(command), application:get_env(num_nodes)).
+  M = application:get_env(master),
+  ping_master(M),
+  init_helper(application:get_env(command), application:get_env(num_nodes), M).
   
 
 % Helper functions
@@ -37,16 +38,16 @@ sleep(Time) ->
 ping_master({ok, Node}) -> pong = net_adm:ping(Node), sleep(5000);
 ping_master(_) -> noop.
 
-init_helper({ok, Command}, {ok, NumNodes}) when integer(NumNodes) ->
+init_helper({ok, Command}, {ok, NumNodes}, Master) when integer(NumNodes) ->
   error_logger:info_msg("Starting with command: ~p~n", [Command]),
   error_logger:info_msg("Starting with ~p nodes~n", [NumNodes]),
-  start_rm(Command, NumNodes);
-init_helper({ok, Command}, undefined) ->
+  start_rm(Command, NumNodes, Master);
+init_helper({ok, Command}, undefined, Master) ->
   error_logger:info_msg("Starting with command: ~p~n", [Command]),
   error_logger:info_msg("Starting with default (1) nodes~n"),
-  start_rm(Command, 1).
+  start_rm(Command, 1, Master).
 
-start_rm(Command, NumNodes) -> 
+start_rm(Command, NumNodes, Master) -> 
   Initalizer = fun(Responder) -> 
                    rails_connection_pool:add({node(), Responder}),
                    {ok, Responder}
@@ -62,5 +63,11 @@ start_rm(Command, NumNodes) ->
       permanent,
       10000,
       worker,
-      [resource_manager]}
+      [resource_manager]},
+     {master_beater,
+      {master_beater, start_link, [Master, rails_connection_pool, 60000, 5000]},
+      permanent,
+      10000,
+      worker,
+      [master_beater]}
     ]}}.
