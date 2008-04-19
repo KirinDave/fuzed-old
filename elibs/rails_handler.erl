@@ -1,6 +1,4 @@
 -module(rails_handler).
--author('klacke@bluetail.com').
--include("yaws_api.hrl").
 -compile(export_all).
 
 

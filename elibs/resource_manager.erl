@@ -1,109 +1,236 @@
 %%%-------------------------------------------------------------------
-%%% File    : /Users/dfayram/Projects/concilium/elibs/resource_manager.erl
+%%% File    : /fuzed/elibs/resource_manager.erl
 %%% Author  : David Fayram
+%%% (katamari)
 %%%-------------------------------------------------------------------
 -module(resource_manager).
 -behaviour(gen_server).
 
-%% API exports
--export([start_link/3, start/3,nodes/0,nodecount/0,change_nodecount/1,cycle/0,cycle/1]).
+%% API
+-export([start_link/5,start/5,nodes/0,nodecount/0,change_spec/1,register_nodes/0,cycle/0,
+         add_node/2]).
 
-%% gen_server callback exports
+%% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
-	 terminate/2, code_change/3]).
+         terminate/2, code_change/3, start_fresh_nodes/0, stop_all_nodes/0]).
 
-%% Erlang records are ugly.
--record(state, {generator = fun() -> undefined end,
-                terminator = fun(_) -> undefined end,
-                nodecount = 1,
-                nodes = [],
-                term_hook = fun(_) -> undefined end
+-record(state, {
+                spec,
+                preproc = fun() -> undefined end,
+                postproc = fun(_) -> undefined end,
+                nodespec = [],
+                nodeapi = [],
+                nodes = dict:new(),
+                timeout = infinity,
+                master = undefined
                }).
 
-%% External call functions
+%%====================================================================
+%% API
+%%====================================================================
+%%--------------------------------------------------------------------
+%% Function: start_link() -> {ok,Pid} | ignore | {error,Error}
+%% Description: Starts the server
+%%--------------------------------------------------------------------
 
-% Note the local server, one of these should run on every
-% node serving up rails responders.
-start_link(Generator, Terminator, NumNodes) ->
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [Generator, Terminator, NumNodes], []).
-start(Generator, Terminator, NumNodes) ->
-    gen_server:start({local, ?MODULE}, ?MODULE, [Generator, Terminator, NumNodes], []).
 
+start_link(Master, Nodes, Preproc, Postproc, Timeout) ->
+  gen_server:start_link({local, ?MODULE}, ?MODULE, [Master, Nodes,Preproc,Postproc,Timeout], []).
+
+
+start(Master, Nodes, Preproc, Postproc, Timeout) ->
+  gen_server:start({local, ?MODULE}, ?MODULE, [Master, Nodes,Preproc,Postproc,Timeout], []).
+
+% Returns the starting specification for this resource manager.
+% @spec specification() -> {string(), int()}
+
+% Returns a list of nodes maintained in this ResourceManager
+% @spec nodes() -> [pid()]
 nodes() -> gen_server:call(?MODULE, nodes).
+
+% Returns a count of all nodes maintained currently.
+% @spec nodecount() -> int()
 nodecount() -> gen_server:call(?MODULE, nodecount).
-change_nodecount(NewNodecount) -> gen_server:cast(?MODULE, {change_nodecount, NewNodecount}).
-cycle() -> gen_server:cast(?MODULE, cycle).
-cycle(Node) -> gen_server:cast({?MODULE, Node}, cycle).
 
-%% GEN_SERVER callbacks.
-init([Generator, Terminator, NumNodes]) ->
-    process_flag(trap_exit, true),
-    Nodes = spawn_nodes(Generator, NumNodes),
-    {ok, #state{generator = Generator, nodecount = NumNodes, 
-                nodes = Nodes, terminator = Terminator}}.
+% Changes the current nodecount. This may result in processes starting or stopping.
+% @spec change_nodecount(int()) -> ok
+change_spec(NewSpec) -> gen_server:cast(?MODULE, {change_spec, NewSpec}).
 
-handle_call(term_hook, _From, State) ->
-  {reply, State#state.term_hook, State};
-handle_call({term_hook, Hook}, _From, State) when is_function(Hook, 1) ->
-  {reply, State#state.term_hook, State#state{term_hook = Hook}};
+% Register the nodes with the master.
+% @spec register_nodes() -> ok
+register_nodes() -> gen_server:cast(?MODULE, register_nodes).
+
+% Adds a node. Not for external use.
+add_node(Node, Cmd) -> gen_server:cast(?MODULE, {add, Cmd, Node}).
+
+% Restarts all processes managed by the current system. Good for un-wedging a wedged system.
+% @spec cycle() -> ok
+cycle() -> gen_server:cast(?MODULE, stop_all_nodes), gen_server:cast(?MODULE, start_fresh_nodes).
+
+stop_all_nodes() -> gen_server:cast(?MODULE, stop_all_nodes).
+start_fresh_nodes() -> gen_server:cast(?MODULE, start_fresh_nodes).
+
+
+%%====================================================================
+%% gen_server callbacks
+%%====================================================================
+
+%%--------------------------------------------------------------------
+%% Function: init(Args) -> {ok, State} |
+%%                         {ok, State, Timeout} |
+%%                         ignore               |
+%%                         {stop, Reason}
+%% Description: Initiates the server
+%%--------------------------------------------------------------------
+init([Master, Nodes, Preproc, Postproc, Timeout]) ->
+  process_flag(trap_exit, true),
+  spawn_nodes(Nodes, Preproc, Timeout, dict:new()),
+  {ok, #state{spec = Nodes,
+              preproc = Preproc, 
+              nodes = dict:new(), 
+              postproc = Postproc,
+              timeout = Timeout,
+              master = Master}}.
+
+%%--------------------------------------------------------------------
+%% Function: %% handle_call(Request, From, State) -> {reply, Reply, State} |
+%%                                      {reply, Reply, State, Timeout} |
+%%                                      {noreply, State} |
+%%                                      {noreply, State, Timeout} |
+%%                                      {stop, Reason, Reply, State} |
+%%                                      {stop, Reason, State}
+%% Description: Handling call messages
+%%--------------------------------------------------------------------
+
 handle_call(nodecount,_From,State) -> 
-  {reply, State#state.nodecount, State};
+  {reply, length(dict:fetch_keys(State#state.nodes)), State};
 handle_call(nodes, _From, State) ->
-  {reply, State#state.nodes, State}.
+  {reply, dict:fetch_keys(State#state.nodes), State};
+handle_call(spec, _From, State) -> 
+  {reply, State#state.spec, State}.
 
-handle_cast(cycle, State) -> 
-  drop_nodes(State#state.terminator, State#state.nodes),
-  {noreply, State#state{nodes=spawn_nodes(State#state.generator, State#state.nodecount)}};
-handle_cast({change_nodecount, NewCount}, S) when is_number(NewCount) -> 
-  Count = S#state.nodecount,
-  if
-    NewCount > Count ->
-      {noreply, 
-        S#state{nodecount = NewCount, 
-                nodes = spawn_nodes(S#state.generator, NewCount - Count) ++ S#state.nodes}};
-    NewCount < Count ->
-      {ToKill, ToKeep} = lists:split(NewCount - Count, S#state.nodes),
-      drop_nodes(S#state.terminator, ToKill),
-      {noreply, S#state{nodecount=NewCount, nodes=ToKeep}};
-    true -> 
-      {noreply, S}
-  end.
+%%--------------------------------------------------------------------
+%% Function: handle_cast(Msg, State) -> {noreply, State} |
+%%                                      {noreply, State, Timeout} |
+%%                                      {stop, Reason, State}
+%% Description: Handling cast messages
+%%--------------------------------------------------------------------
 
-handle_info({'EXIT', Pid, _Reason}, S) -> 
-  Term = S#state.terminator,
-  Membership = lists:any(fun(X) -> X =:= Pid end, S#state.nodes), 
-  if
-    Membership -> 
-      Term(Pid),
-      Res = lists:delete(Pid, S#state.nodes),
-      NewNode = spawn_linked_node(S#state.generator),
-      {noreply, S#state{nodes=[NewNode|Res]}};
-    true -> 
-      {noreply, S}
+% Node, Setup, Finisher, Registry
+
+handle_cast({add, Cmd, Node}, State) -> 
+  link(Node), % We wuv woo!
+  NewDict = add_node_record(Node, Cmd, State#state.nodes),
+  {noreply, State#state{nodes=NewDict}};
+handle_cast(start_fresh_nodes, State) -> 
+  spawn_nodes(State#state.spec, State#state.preproc, State#state.timeout, State#state.nodes),
+  {noreply, State};
+handle_cast(stop_all_nodes, State) -> 
+  NodeDict = State#state.nodes, 
+  RenewNodes = fun(N) -> cease_node(N,State#state.postproc,NodeDict) end,
+  lists:foreach(RenewNodes, dict:fetch_keys(NodeDict)),
+  {noreply, State#state{nodes=dict:new()}};
+handle_cast({change_spec, NewSpec}, State) -> 
+  {noreply, State#state{spec=NewSpec}};
+handle_cast(register_nodes, State) ->
+  Nodes = State#state.nodes,
+  lists:foreach(fun(X) -> run_call(State#state.preproc, X) end, dict:fetch_keys(Nodes)),
+  error_logger:info_msg("All ports reregistered.~n"),
+  {noreply, State}.
+
+
+%%--------------------------------------------------------------------
+%% Function: handle_info(Info, State) -> {noreply, State} |
+%%                                       {noreply, State, Timeout} |
+%%                                       {stop, Reason, State}
+%% Description: Handling all non call/cast messages
+%%--------------------------------------------------------------------
+handle_info({'EXIT', Pid, Reason}, State) -> 
+  case dict:is_key(Pid, State#state.nodes) of
+    true ->
+      error_logger:warning_msg("PortWrapper ~p was terminated due to: ~p. Restarting & Heating.", [Pid,Reason]),
+      NewNodeDict = restart_dead_node(Pid,State#state.preproc, State#state.postproc,State#state.timeout,State#state.nodes),
+      {noreply, State#state{nodes=NewNodeDict}};
+    false -> 
+      {noreply, State}
   end;
 handle_info(Any,S) -> 
-  io:format("Got INFO ~p~n", [Any]),
+  error_logger:info_msg("Got INFO ~p~n", [Any]),
   {noreply, S}.
 
+%%--------------------------------------------------------------------
+%% Function: terminate(Reason, State) -> void()
+%% Description: This function is called by a gen_server when it is about to
+%% terminate. It should be the opposite of Module:init/1 and do any necessary
+%% cleaning up. When it returns, the gen_server terminates with Reason.
+%% The return value is ignored.
+%%--------------------------------------------------------------------
 terminate(_Reason, _State) ->
     ok.
-    
+
+%%--------------------------------------------------------------------
+%% Func: code_change(OldVsn, State, Extra) -> {ok, NewState}
+%% Description: Convert process state when code is changed
+%%--------------------------------------------------------------------
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
-%% Utility functions
+%%--------------------------------------------------------------------
+%%% Internal functions
+%%--------------------------------------------------------------------
 
-spawn_linked_node(Generator) -> 
-  Node = Generator(),
-  link(Node),
-  Node.
+listify(X) when is_list(X) -> X;
+listify(X) -> [X].
 
-spawn_nodes(Generator,NumNodes) ->
-  spawn_nodes(Generator,NumNodes,[]).
+run_call({Module, Function}, Args) -> apply(Module, Function, listify(Args));
+run_call(Function,Args) when is_function(Function) -> apply(Function, listify(Args)).
 
-spawn_nodes(_Generator,0,Acc) -> Acc;
-spawn_nodes(Generator,NumNodes,Acc) -> spawn_nodes(Generator,NumNodes - 1, [spawn_linked_node(Generator)|Acc]).
+% @spec spawn_linked_node(Cmd, Call) -> {process(), Cmd}
+spawn_unlinked_node(Cmd, Call, Timeout) -> 
+  Port = port_wrapper:wrap(Cmd, Timeout),
+  case run_call(Call, Port) of
+    ok -> {Port, Cmd};
+    fail -> {error, Cmd}
+  end.
 
-drop_nodes(Terminator, Nodes) -> 
-  Killer = fun(Node) -> unlink(Node), Terminator(Node) end,
-  lists:map(Killer, Nodes).
+add_node_record(Node, Cmd, Registry) -> dict:store(Node, Cmd, Registry).
+erase_node_record(Node, Registry) -> dict:erase(Node, Registry).
+
+% @spec spawn_nodes(Nodes::[string()], Registerer::fun(), Registry::dict()) -> dict()
+spawn_nodes({Cmd, Num}, Setup, Timeout, Registry) -> spawn_nodes(lists:duplicate(Num, Cmd), Setup, Timeout, Registry);
+spawn_nodes(Nodes, Setup, Timeout, _Registry) when is_list(Nodes) ->
+  F = fun(Cmd) -> spawn( 
+    fun() -> 
+      case spawn_unlinked_node(Cmd, Setup, Timeout) of
+        {error, Cmd} -> 
+          error_logger:error_msg("Failed to start node with command: ~n~p~n. Resource manager cannot function in this state, system is idle.~nPossible causes include a crash on startup or a timeout on startup. Make sure nodes can start on this machine!",
+                                 [Cmd]);
+        {Port, Cmd} -> resource_manager:add_node(Port, Cmd)
+      end
+    end ) 
+  end,
+  lists:foreach(F, Nodes).
+  
+restart_dead_node(Node, Setup, Finisher, Timeout, Registry) -> 
+  % Node is dead, so it should be removed everywhere that 
+  % cares about it, no need to explicitly remove it from
+  % pools.
+  apply(Finisher, [Node]),
+  Cmd = dict:fetch(Node, Registry),
+  NegReg = erase_node_record(Node, Registry),
+  spawn_nodes([Cmd], Setup, Timeout, NegReg), 
+  NegReg.
+
+cease_node(Node, Finisher, Registry) -> 
+  unlink(Node),
+  try 
+    case Finisher(Node) of
+      ok -> ok;
+      {error, Why} -> throw(Why)
+    end
+  catch
+    _:X -> error_logger:error_msg("Failed to remove node ~p. Reason: ~p", [Node, X])
+  end,
+  port_wrapper:shutdown(Node),
+  erase_node_record(Node, Registry).
+

@@ -47,19 +47,18 @@ init_helper({ok, Command}, undefined) ->
   start_rm(Command, 1).
 
 start_rm(Command, NumNodes) -> 
-  Maker = fun() -> 
-    Responder = port_wrapper:wrap(Command),
-    rails_connection_pool:add({node(), Responder}),
-    Responder
-  end,
-  Killer = fun(Responder) -> 
-    Responder ! shutdown,
-    rails_connection_pool:remove({node(), Responder})
-  end,
-  
+  Initalizer = fun(Responder) -> 
+                   rails_connection_pool:add({node(), Responder}),
+                   {ok, Responder}
+               end,
+  Destructor = fun(Responder) -> 
+                   rails_connection_pool:remove({node(), Responder}),
+                   ok
+               end,
   {ok, {{one_for_one, 3, 10},
     [{resource_manager,
-      {resource_manager, start_link, [Maker, Killer, NumNodes]},
+      {resource_manager, start_link, [node(), {Command, NumNodes},
+                                      Initalizer, Destructor, 60000]},
       permanent,
       10000,
       worker,
